@@ -102,13 +102,13 @@ class CMakeBuild(build_ext):
 # The information here can also be placed in setup.cfg - better separation of
 # logic and declaration, and simpler if you include description/version in a file.
 setup(
-    name="pysfst",
+    name="sfst",
     version="0.0.1",
-    author="Dean Moldovan",
-    author_email="dean0x7d@gmail.com",
-    description="A test project using pybind11 and CMake",
-    long_description="",
-    ext_modules=[CMakeExtension("pysfst")],
+    author="Santhosh Thottingal",
+    author_email="santhosh.thottingal@gmail.com",
+    description="Python binding for SFST",
+    long_description="Python binding for Stuttgart Finite State Transducer",
+    ext_modules=[CMakeExtension("sfst")],
     cmdclass={"build_ext": CMakeBuild},
     zip_safe=False,
 )

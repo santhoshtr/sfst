@@ -82,7 +82,7 @@ add_executable(fst-parse fst-parse.C ${LIB_OBJS})
 add_executable(fst-lowmem fst-lowmem.C ${LIB_OBJS})
 
 # Add library
-add_library(sfst STATIC ${LIB_OBJS})
+add_library(sfst SHARED ${LIB_OBJS})
 set_target_properties(sfst PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 # Install

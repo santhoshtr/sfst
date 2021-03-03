@@ -1,73 +1,106 @@
 #include <pybind11/pybind11.h>
+#include <sstream>
 
 #include "../src/fst.h"
 
 using namespace SFST;
 
-#define STRINGIFY(x) #x
-#define MACRO_STRINGIFY(x) STRINGIFY(x)
+const int GENERATE_MODE = 1;
+const int ANALYSE_MODE  = 2;
 
-int add(int i, int j)
-{
-    return i + j;
+Transducer *transducer;
+char *temp_filename = "None";
+
+/*
+ * Use the transducer (either in generate- or in analyse-mode) to rewrite the
+ * input string (GENERATE_MODE, ANALYSE_MODE). This function is not directly
+ * callable from Python.
+ * Because of peculiarities in the implementation of SFST it is not possible
+ * to access the output of the analyse_string/generate_string directly. As a
+ * workaround the result is written into a file and afterwards read out.
+ */
+const char *transduce(char input[], int mode){
+	FILE *temp_file;
+
+ 	// Analyse or generate transducer output and write to file
+ 	temp_file = fopen(temp_filename, "w");
+	if (mode == ANALYSE_MODE) {
+ 		transducer->analyze_string(input, temp_file, true);
+	} else if (mode == GENERATE_MODE) {
+		transducer->generate_string(input, temp_file, true);
+	}
+ 	fclose(temp_file);
+
+ 	// Read transducer output from file
+ 	char c;
+ 	std::ostringstream oss(std::ostringstream::out);
+ 	temp_file = fopen(temp_filename, "r");
+ 	c = fgetc(temp_file);
+ 	while (c != EOF) {
+ 		oss.put(c);
+ 		c = fgetc(temp_file);
+ 	}
+ 	fclose(temp_file);
+
+	return oss.str().c_str();
 }
 
-int analyse(){
-    FILE *file;
-
-    file = stdin;
-    if (file == NULL)
+void init(char *transducer_filename){
+     // Initialize transducer.
+	FILE *transducer_file;
+    if (transducer_filename == NULL)
     {
-        printf("Please provide input file");
+        printf("Please provide transducer file");
         exit(1);
     }
-    try {
-        Transducer a(file);
-        fclose(file);
-        std::cout << "ok";
-    }
-  catch (const char *p) {
-    std::cerr << p << "\n";
-    return 1;
-  }
-
-    return 0;
+	transducer_file = fopen(transducer_filename, "rb");
+	transducer = new Transducer(transducer_file);
+	fclose(transducer_file);
 }
+
+/*
+ * Destroys the transducer object.
+ * args: None
+ */
+void delete_transducer(){
+    delete transducer;
+}
+
+const char *analyse(char *analysis_input){
+    return transduce(analysis_input, ANALYSE_MODE);
+}
+
+const char *generate(char *generate_input){
+    return transduce(generate_input, GENERATE_MODE);
+}
+
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(pysfst, m)
+PYBIND11_MODULE(sfst, m)
 {
-    m.doc() = R"pbdoc(
-        Pybind11 example plugin
-        -----------------------
+    m.def("init", &init, R"pbdoc(
+        Initialize transducer
 
-        .. currentmodule:: python_example
-
-        .. autosummary::
-           :toctree: _generate
-
-           add
-           subtract
-    )pbdoc";
-
-    m.def("add", &add, R"pbdoc(
-        Add two numbers
-
-        Some other explanation about the add function.
-    )pbdoc");
-
-    m.def(
-        "subtract", [](int i, int j) { return i - j; }, R"pbdoc(
-        Subtract two numbers
-
-        Some other explanation about the subtract function.
+        Some other explanation about the analyse function.
     )pbdoc");
 
     m.def("analyse", &analyse, R"pbdoc(
-        Analyse two numbers
+        Analyse a string
 
         Some other explanation about the analyse function.
+    )pbdoc");
+
+    m.def("generate", &generate, R"pbdoc(
+        Generate a string
+
+        Some other explanation about the generate function.
+    )pbdoc");
+
+    m.def("delete", &delete_transducer, R"pbdoc(
+        Delete the transducer instance
+
+        Some other explanation about the generate function.
     )pbdoc");
 
 #ifdef VERSION_INFO
