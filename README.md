@@ -1,9 +1,7 @@
 
-                           SFST README
+# SFST
 
-
-Installation (Unix and Linux only)
-============
+## Installation (Unix and Linux only)
 
 (Thanks to Robert Rathbone for suggestions which improved this README file.)
 
@@ -15,7 +13,7 @@ You might additionally need one or more of the following tools:
 
 1) The "Flex" scanner generator which can be downloaded from:
    http://flex.sourceforge.net. Flex relies on m4 to function properly.
-  
+
 2) The "m4" macro processor which must be installed along with Flex.
    Download from: http://www.gnu.org/software/m4
 
@@ -26,21 +24,26 @@ You might additionally need one or more of the following tools:
 5) Once they are installed you should be able to install SFST without
    any further problems.
 
-
 After unpacking the software package, change to the source
 directory and call
 
-> make
+```
+make
+```
 
 to compile the tools. Then call
 
-> make install
+```
+make install
+```
 
 to install the tools in /usr/local/bin. Change the variable DESTDIR
-in Makefile if you want to install to a different directory. 
+in Makefile if you want to install to a different directory.
 Finally call
 
-> make maninstall
+```
+make maninstall
+```
 
 to install the manpages in /usr/local/man/man1 and you are done.
 
@@ -51,9 +54,7 @@ morphological analyser, the source code of the German SMOR morphology
 XMOR which may be used as a starting point for the development of a
 computational morphology.
 
-
-Problems with readline
-----------------------
+### Problems with readline
 
 If you get an error message from the C++ compiler saying that it is
 unable to find "readline/readline.h", you should install the GNU
@@ -65,25 +66,27 @@ the following line
 #READLINE = -DREADLINE
 
 
-Problems with hash_set and hash_map
------------------------------------
+### Problems with hash_set and hash_map
 
 If you get a message saying that hash_set and hash_map are not found,
 you should uncomment the following line in the Makefile
 
+```
 #SGILIB = -DSGIext
+```
 
 If that does not help, make sure that hash_set and hash_map are
 contained in your C++ libraries. Check in which subdirectory the
 include files for hash_map and hash_set are located and to which name
 space they are added. Then edit in the file alphabet.h the lines
 starting with
+```
   #ifdef SGIext ...
+```
 appropriately.
 
 
-Usage
-=====
+## Usage
 
 See the manual SFST-Manual.pdf in the doc subdirectory and the man
 pages for more information on the SFST tools. doc/SFST-Tutorial.pdf
@@ -95,16 +98,14 @@ implemented with the standard (fst-infl) and the compact (fst-infl2)
 transducer format.
 
 
-Author
-======
+## Author
 
 The SFST tools have been implemented by Helmut Schmid, Institute for
 Computational Linguistics, University of Stuttgart, Germany and they
 are available under the GNU public license version 2 or higher.
 
 
-Bug reports
-===========
+## Bug reports
 
 Please send bug reports and other feedback to schmid@cis.lmu.de.
 
