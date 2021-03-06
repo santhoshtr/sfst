@@ -11,9 +11,12 @@ set(CMAKE_CXX_FLAGS "-O3 -Wall -Wcast-qual -Wconversion -std=c++11 -Wno-deprecat
 
 add_definitions(-DSGI__gnu_cxx)
 
-FLEX_TARGET(sfst default-scanner.ll default-scanner.C)
-FLEX_TARGET(sfst utf8-scanner.ll utf8-scanner.ll.C)
-BISON_TARGET(sfst fst-compiler.yy fst-compiler.C DEFINES_FILE fst-compiler.h)
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
+include_directories(.)
+
+BISON_TARGET(sfst fst-compiler.yy ${CMAKE_CURRENT_BINARY_DIR}/fst-compiler.C DEFINES_FILE ${CMAKE_CURRENT_BINARY_DIR}/fst-compiler.h)
+FLEX_TARGET(sfst default-scanner.ll ${CMAKE_CURRENT_BINARY_DIR}/default-scanner.C)
+FLEX_TARGET(sfst utf8-scanner.ll ${CMAKE_CURRENT_BINARY_DIR}/utf8-scanner.C)
 
 # Include dir
 include_directories(/usr/local/include)
@@ -31,13 +34,10 @@ set (CLI_PROGRAMS
     fst-infl2.C
     fst-match.C
     fst-train.C
-    fst-compiler.C
     fst-infl2-daemon.C
     fst-mor.C
-    fst-compiler.h
     fst-infl3.C
     fst-parse2.C
-    fst-compiler.yy
     fst-infl.C
     fst-parse.C
     fst-generate.C
@@ -49,7 +49,7 @@ set (CLI_PROGRAMS
 )
 
 set(HEADERS
-    alphabet.h basic.h fst.h interface.h mem.h sgi.h utf8.h
+    alphabet.h basic.h fst.h interface.h mem.h sgi.h utf8.h fst-compiler.h
 )
 
 set(SOURCE_FILES
@@ -63,6 +63,7 @@ set(SOURCE_FILES
     interface.C
     default-scanner.C
     utf8-scanner.C
+    fst-compiler.C
 )
 
 add_executable(fst-compiler-utf8 compact.C make-compact.C interface.C
