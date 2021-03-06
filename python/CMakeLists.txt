@@ -22,15 +22,18 @@ set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
 include(CPack)
 
+get_filename_component(SFSTDIR ../src ABSOLUTE)
+
 set (SFSTLIBSOURCES
-	../src/basic.C
-	../src/utf8.C
-	../src/alphabet.C
-	../src/fst.C
-	../src/operators.C
-	../src/determinise.C
-	../src/hopcroft.C
+	${SFSTDIR}/basic.C
+	${SFSTDIR}/utf8.C
+	${SFSTDIR}/alphabet.C
+	${SFSTDIR}/fst.C
+	${SFSTDIR}/operators.C
+	${SFSTDIR}/determinise.C
+	${SFSTDIR}/hopcroft.C
 )
+
 add_library(libsfst STATIC ${SFSTLIBSOURCES})
 set_target_properties(libsfst PROPERTIES POSITION_INDEPENDENT_CODE ON)
 

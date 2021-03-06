@@ -34,7 +34,7 @@ jobs:
       run: python -m pip install --upgrade wheel setuptools
 
     - name: Build and install
-      run: pip install --verbose .
+      run: python setup.py install
 
     - name: Test
       run: python tests/test.py
