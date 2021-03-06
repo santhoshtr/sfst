@@ -67,10 +67,6 @@ jobs:
 
     - name: Build wheel
       run: python -m cibuildwheel --output-dir wheelhouse
-      env:
-        # Python 2.7 on Windows requires a workaround for C++11 support,
-        # built separately below
-        CIBW_SKIP: cp27-win*
 
     - name: Show files
       run: ls -lh wheelhouse
