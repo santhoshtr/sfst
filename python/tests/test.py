@@ -1,6 +1,5 @@
 import os
 import sfst
-import pathlib
 import os
 
 CURR_DIR = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
