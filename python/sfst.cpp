@@ -3,6 +3,9 @@
 
 #include "../src/fst.h"
 
+#define STRINGIFY(x) #x
+#define MACRO_STRINGIFY(x) STRINGIFY(x)
+
 using namespace SFST;
 
 const int GENERATE_MODE = 1;

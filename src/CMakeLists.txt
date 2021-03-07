@@ -1,12 +1,8 @@
 cmake_minimum_required(VERSION 3.1)
-project(sfst VERSION 0.1.0)
 
 find_package(FLEX)
 find_package(BISON)
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_FLAGS "-O3 -Wall -Wcast-qual -Wconversion -std=c++11 -Wno-deprecated -ansi")
 
 add_definitions(-DSGI__gnu_cxx)
@@ -21,73 +17,77 @@ FLEX_TARGET(sfst utf8-scanner.ll ${CMAKE_CURRENT_BINARY_DIR}/utf8-scanner.C)
 # Include dir
 include_directories(/usr/local/include)
 
-# Src
-AUX_SOURCE_DIRECTORY(src SRC_FILES)
-
 # Source files
-set (LIB_OBJS
+set (LIB_SOURCES
     basic.C utf8.C alphabet.C fst.C operators.C determinise.C hopcroft.C
-)
-
-set (CLI_PROGRAMS
-    fst-compare.C
-    fst-infl2.C
-    fst-match.C
-    fst-train.C
-    fst-infl2-daemon.C
-    fst-mor.C
-    fst-infl3.C
-    fst-parse2.C
-    fst-infl.C
-    fst-parse.C
-    fst-generate.C
-    fst-lattice.C
-    fst-print.C
-    fst-compact.C
-    fst-lowmem.C
-    fst-text2bin.C
 )
 
 set(HEADERS
     alphabet.h basic.h fst.h interface.h mem.h sgi.h utf8.h fst-compiler.h
 )
 
-set(SOURCE_FILES
-    ${LIB_OBJS}
-    ${CLI_PROGRAMS}
-    ${HEADERS}
-    lowmem.C
-    make-compact.C
-    robust.C
-    make-compact.h
-    interface.C
-    default-scanner.C
-    utf8-scanner.C
-    fst-compiler.C
-)
+# Add library
+add_library(libsfst SHARED ${LIB_SOURCES})
+set_target_properties(libsfst PROPERTIES POSITION_INDEPENDENT_CODE ON)
+# Have the output name libsfst.so
+set_target_properties(libsfst PROPERTIES OUTPUT_NAME "sfst")
+
+# Have a static library
+add_library(libsfststatic STATIC ${LIB_SOURCES})
+set_target_properties(libsfststatic PROPERTIES POSITION_INDEPENDENT_CODE ON)
+set_target_properties(libsfststatic PROPERTIES OUTPUT_NAME "sfst.static")
 
 add_executable(fst-compiler-utf8 compact.C make-compact.C interface.C
-utf8-scanner.C fst-compiler.C ${LIB_OBJS})
+utf8-scanner.C fst-compiler.C)
+target_link_libraries(fst-compiler-utf8 libsfst)
 target_link_libraries(fst-compiler-utf8 readline)
 
-add_executable(fst-mor fst-mor.C ${LIB_OBJS})
-add_executable(fst-text2bin fst-text2bin.C ${LIB_OBJS})
-add_executable(fst-infl2 fst-infl2.C compact.C robust.C ${LIB_OBJS})
-add_executable(fst-infl3 fst-infl3.C lowmem.C ${LIB_OBJS})
-add_executable(fst-infl fst-infl.C ${LIB_OBJS})
-add_executable(fst-train fst-train.C compact.C ${LIB_OBJS})
-add_executable(fst-match fst-match.C compact.C ${LIB_OBJS})
-add_executable(fst-generate fst-generate.C generate.C ${LIB_OBJS})
-add_executable(fst-compact fst-compact.C make-compact.C compact.C ${LIB_OBJS})
-add_executable(fst-parse fst-parse.C ${LIB_OBJS})
-add_executable(fst-lowmem fst-lowmem.C ${LIB_OBJS})
+add_executable(fst-mor fst-mor.C)
+target_link_libraries(fst-mor libsfst)
 
-# Add library
-add_library(sfst SHARED ${LIB_OBJS})
-set_target_properties(sfst PROPERTIES POSITION_INDEPENDENT_CODE ON)
+add_executable(fst-text2bin fst-text2bin.C)
+target_link_libraries(fst-text2bin libsfst)
+
+add_executable(fst-infl2 fst-infl2.C compact.C robust.C)
+target_link_libraries(fst-infl2 libsfst)
+
+add_executable(fst-infl3 fst-infl3.C lowmem.C)
+target_link_libraries(fst-infl3 libsfst)
+
+add_executable(fst-infl fst-infl.C)
+target_link_libraries(fst-infl libsfst)
+
+add_executable(fst-train fst-train.C compact.C)
+target_link_libraries(fst-train libsfst)
+
+add_executable(fst-match fst-match.C compact.C )
+target_link_libraries(fst-match libsfst)
+
+add_executable(fst-generate fst-generate.C generate.C)
+target_link_libraries(fst-generate libsfst)
+
+add_executable(fst-compact fst-compact.C make-compact.C compact.C)
+target_link_libraries(fst-compact libsfst)
+
+add_executable(fst-parse fst-parse.C)
+target_link_libraries(fst-parse libsfst)
+
+add_executable(fst-print fst-print.C)
+target_link_libraries(fst-print libsfst)
+
+add_executable(fst-lattice fst-lattice.C)
+target_link_libraries(fst-lattice libsfst)
+
+add_executable(fst-lowmem fst-lowmem.C)
+target_link_libraries(fst-lowmem libsfst)
+
 
 # Install
-install(TARGETS sfst DESTINATION lib)
+install(TARGETS fst-compact fst-generate fst-infl2 fst-lattice fst-match  fst-parse fst-text2bin fst-compiler-utf8 fst-infl fst-infl3 fst-lowmem fst-mor fst-print fst-train libsfst
+    RUNTIME DESTINATION bin
+    RUNTIME DESTINATION lib)
 
 # Install the headers
 install(FILES ${HEADERS} DESTINATION include)
+
+
