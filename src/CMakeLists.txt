@@ -90,11 +90,14 @@ if(BISON_FOUND AND FLEX_FOUND)
 
     add_executable(fst-lowmem fst-lowmem.C)
     target_link_libraries(fst-lowmem libsfst)
+
+
+    # Install
+    install(TARGETS fst-compact fst-generate fst-infl2 fst-lattice fst-match  fst-parse fst-text2bin fst-compiler-utf8 fst-infl fst-infl3 fst-lowmem fst-mor fst-print fst-train
+        RUNTIME DESTINATION bin)
 endif()
 
-# Install
-install(TARGETS fst-compact fst-generate fst-infl2 fst-lattice fst-match  fst-parse fst-text2bin fst-compiler-utf8 fst-infl fst-infl3 fst-lowmem fst-mor fst-print fst-train libsfst
-    RUNTIME DESTINATION bin
+install(TARGETS libsfst
     RUNTIME DESTINATION lib)
 
 # Install the headers
