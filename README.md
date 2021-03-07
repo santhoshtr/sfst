@@ -4,10 +4,17 @@
 
 |      CI              | status |
 |----------------------|--------|
-| CMake builds           | [![Cmake Actions Status][actions-cmake-badge]][actions-cmake-link] |
+| CMake builds           | [![CMake Actions Status][actions-cmake-badge]][actions-cmake-link] |
+| Pip builds           | [![Pip Actions Status][actions-pip-badge]][actions-pip-link] |
+| Wheels builds           | [![Wheels Actions Status][actions-wheels-badge]][actions-wheels-link] |
 
 [actions-cmake-link]:        https://github.com/santhoshtr/sfst/actions?query=workflow%3A%22CMake
+[actions-pip-link]:        https://github.com/santhoshtr/sfst/actions?query=workflow%3A%22Pip
+[actions-wheels-link]:        https://github.com/santhoshtr/sfst/actions?query=workflow%3A%22Wheels
 [actions-cmake-badge]:       https://github.com/santhoshtr/sfst/workflows/CMake/badge.svg
+[actions-pip-badge]:       https://github.com/santhoshtr/sfst/workflows/Pip/badge.svg
+[actions-wheels-badge]:       https://github.com/santhoshtr/sfst/workflows/Wheels/badge.svg
+
 ## Installation (Unix and Linux only)
 
 (Thanks to Robert Rathbone for suggestions which improved this README file.)
