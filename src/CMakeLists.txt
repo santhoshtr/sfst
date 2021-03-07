@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.1)
 find_package(FLEX 2.6.4)
 find_package(BISON)
 
-set(CMAKE_CXX_FLAGS "-O3 -Wall -Wconversion -std=c++11 -Wno-deprecated -ansi")
+set(CMAKE_CXX_FLAGS "-O3 -Wall -std=c++11 -Wno-deprecated -ansi")
 
 add_definitions(-DSGI__gnu_cxx)
 
