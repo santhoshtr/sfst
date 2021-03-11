@@ -14,6 +14,8 @@ using std::pair;
 using std::set;
 using std::vector;
 
+#include <unordered_map>
+using std::unordered_map;
 namespace SFST {
 
 /*****************  class NodeSet  *********************************/
@@ -96,7 +98,7 @@ private:
       return 1;
     }
   };
-  typedef hash_map<NodeArray *, Node *, hashf, equalf> NodeMap;
+  typedef unordered_map<NodeArray *, Node *, hashf, equalf> NodeMap;
   NodeMap hm;
 
 public:

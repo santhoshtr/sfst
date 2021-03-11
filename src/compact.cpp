@@ -14,6 +14,9 @@
 
 #include <limits.h>
 
+
+#include <algorithm>
+
 #include "compact.h"
 
 namespace SFST {

@@ -371,8 +371,8 @@ void Alphabet::copy(const Alphabet &a, Level level)
 
 {
   utf8 = a.utf8;
-  sm.resize(a.sm.size());
-  cm.resize(a.sm.size());
+  sm.reserve(a.sm.size());
+  cm.reserve(a.sm.size());
   insert_symbols(a);
   for (LabelSet::const_iterator it = a.begin(); it != a.end(); it++) {
     Label l = *it;
@@ -775,7 +775,7 @@ void Alphabet::disambiguate(vector<Analysis> &analyses)
   for (size_t i = 0; i < analyses.size(); i++)
     if (score[i] == bestscore)
       analyses[k++] = analyses[i];
-  analyses.resize(k);
+  analyses.reserve(k);
 }
 
 /*******************************************************************/

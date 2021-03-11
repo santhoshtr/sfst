@@ -32,7 +32,7 @@ set (LIB_SOURCES
 )
 
 set(HEADERS
-    alphabet.h basic.h fst.h interface.h mem.h sgi.h utf8.h fst-compiler.h
+    alphabet.h basic.h fst.h interface.h mem.h utf8.h fst-compiler.h
 )
 
 # Add library

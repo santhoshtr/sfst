@@ -9,6 +9,7 @@
 /*******************************************************************/
 
 #include <math.h>
+#include <algorithm>
 
 #include "make-compact.h"
 

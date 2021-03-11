@@ -31,6 +31,12 @@ using std::ostream;
 using std::set;
 using std::vector;
 
+#include <unordered_map>
+using std::unordered_map;
+
+#include <unordered_set>
+using std::unordered_set;
+
 #include "mem.h"
 
 namespace SFST {
@@ -55,7 +61,7 @@ class Transition;
 struct hashf {
   size_t operator()(const Node *n) const { return (size_t)n; }
 };
-typedef hash_set<const Node *, hashf> NodeHashSet;
+typedef unordered_set<const Node *, hashf> NodeHashSet;
 
 /*****************  class Arc  *************************************/
 
@@ -198,7 +204,7 @@ private:
       return (p1.first == p2.first && p1.second == p2.second);
     }
   };
-  typedef hash_map<NodePair, Node *, hashf, equalf> PairMap;
+  typedef unordered_map<NodePair, Node *, hashf, equalf> PairMap;
   PairMap pm;
 
 public:
@@ -222,7 +228,7 @@ private:
   size_t transition_count;
 
   typedef set<Label, Label::label_cmp> LabelSet;
-  typedef hash_map<Character, char *> SymbolMap;
+  typedef unordered_map<Character, char *> SymbolMap;
 
   void incr_vmark(void) {
     if (++vmark == 0) {

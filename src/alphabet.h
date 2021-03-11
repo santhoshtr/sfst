@@ -18,6 +18,7 @@
 
 #include <set>
 using std::set;
+using std::hash;
 
 #include <vector>
 using std::vector;
@@ -27,7 +28,9 @@ using std::ostream;
 
 #include <cstring>
 
-#include "sgi.h"
+//#include "sgi.h"
+#include <unordered_map>
+using std::unordered_map;
 
 #define SFSTVersion "1.4.7d"
 
@@ -168,12 +171,12 @@ class Alphabet {
   typedef set<Label, Label::label_cmp> LabelSet;
 
   // hash table used to map the symbols to their codes
-  typedef hash_map<const char *, Character, hash<const char *>, eqstr>
+  typedef unordered_map<const char *, Character, hash<const char *>, eqstr>
       SymbolMap;
 
 public: // HFST addition
   // hash table used to map the codes back to the symbols
-  typedef hash_map<Character, char *> CharMap;
+  typedef unordered_map<Character, char *> CharMap;
 
   // HFST addition
   bool operator==(const Alphabet &alpha) const;

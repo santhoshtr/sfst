@@ -12,6 +12,8 @@
 using std::cerr;
 using std::pair;
 
+#include <unordered_map>
+using std::unordered_map;
 namespace SFST {
 
 typedef map<Character, vector<Arc *>> Sym2Arcs;
@@ -56,7 +58,7 @@ class CharNode2Trans {
     }
   };
 
-  typedef hash_map<NodeSym, FromTo, hashf, equalf> NodeSym2Range;
+  typedef unordered_map<NodeSym, FromTo, hashf, equalf> NodeSym2Range;
 
   // data structure for storing an index from node + symbol to a list
   // of transitions with that symbol on the upper/lower layer
