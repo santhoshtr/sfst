@@ -10,27 +10,27 @@
 #ifndef _MAKE_COMPACT_H_
 #define _MAKE_COMPACT_H_
 
-#include "fst.h"
 #include "compact.h"
+#include "fst.h"
 
 namespace SFST {
 
-  class MakeCompactTransducer : CompactTransducer {
-    
-  private:
-    void count_arcs(Node *node, VType vmark);
-    void store_arcs(Node *node, VType vmark);
-    void store_finalp( FILE *file );
-    void store_first_arcs( FILE *file );
-    void store_target_nodes( FILE *file );
-    void store_labels( FILE *file );
+class MakeCompactTransducer : CompactTransducer {
 
-  public:
-    MakeCompactTransducer( Transducer &a, Level sort=upper );
+private:
+  void count_arcs(Node *node, VType vmark);
+  void store_arcs(Node *node, VType vmark);
+  void store_finalp(FILE *file);
+  void store_first_arcs(FILE *file);
+  void store_target_nodes(FILE *file);
+  void store_labels(FILE *file);
 
-    void sort( Level );
-    void store( FILE *file );
-  };
+public:
+  MakeCompactTransducer(Transducer &a, Level sort = upper);
 
-}
+  void sort(Level);
+  void store(FILE *file);
+};
+
+} // namespace SFST
 #endif

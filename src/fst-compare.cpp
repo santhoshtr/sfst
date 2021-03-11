@@ -9,11 +9,10 @@
 
 #include "fst.h"
 
-using std::cout;
 using std::cerr;
+using std::cout;
 
 using namespace SFST;
-
 
 /*******************************************************************/
 /*                                                                 */
@@ -21,22 +20,22 @@ using namespace SFST;
 /*                                                                 */
 /*******************************************************************/
 
-int main( int argc, char **argv )
+int main(int argc, char **argv)
 
 {
   FILE *file1, *file2;
 
   if (argc < 3) {
-    fprintf(stderr,"\nUsage: %s file file\n\n", argv[0]);
+    fprintf(stderr, "\nUsage: %s file file\n\n", argv[0]);
     exit(1);
   }
 
-  if ((file1 = fopen(argv[1],"rb")) == NULL) {
-    fprintf(stderr,"\nError: Cannot open transducer file %s\n\n", argv[1]);
+  if ((file1 = fopen(argv[1], "rb")) == NULL) {
+    fprintf(stderr, "\nError: Cannot open transducer file %s\n\n", argv[1]);
     exit(1);
   }
-  if ((file2 = fopen(argv[2],"rb")) == NULL) {
-    fprintf(stderr,"\nError: Cannot open transducer file %s\n\n", argv[2]);
+  if ((file2 = fopen(argv[2], "rb")) == NULL) {
+    fprintf(stderr, "\nError: Cannot open transducer file %s\n\n", argv[2]);
     exit(1);
   }
 
@@ -50,8 +49,7 @@ int main( int argc, char **argv )
       cout << "Transducers are equivalent\n";
     else
       cout << "Transducers are different\n";
-  }
-  catch (const char *p) {
+  } catch (const char *p) {
     cerr << p << "\n";
     return 1;
   }

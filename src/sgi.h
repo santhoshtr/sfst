@@ -12,61 +12,60 @@
 #define _SGI_INCLUDED
 
 #if HAVE_CONFIG_H
-#  include <config.h>
+#include <config.h>
 #endif
 
 #if HAVE_BACKWARD_HASH_MAP
-#  include <backward/hash_map>
+#include <backward/hash_map>
 #elif HAVE_EXT_HASH_MAP
-#  include <ext/hash_map>
+#include <ext/hash_map>
 #elif HAVE_HASH_MAP
-#  include <hash_map>
+#include <hash_map>
 #elif SGIext
-#  include <ext/hash_map>
+#include <ext/hash_map>
 #elif SGI__gnu_cxx
-#  include <ext/hash_map>
+#include <ext/hash_map>
 #else
-#  warning "unknown hash_map"
-#  include <hash_map>
+#warning "unknown hash_map"
+#include <hash_map>
 #endif
 #if HAVE_BACKWARD_HASH_SET
-#  include <backward/hash_set>
+#include <backward/hash_set>
 #elif HAVE_EXT_HASH_SET
-#  include <ext/hash_set>
+#include <ext/hash_set>
 #elif HAVE_HASH_SET
-#  include <hash_set>
+#include <hash_set>
 #elif SGIext
-#  include <ext/hash_set>
+#include <ext/hash_set>
 #elif SGI__gnu_cxx
-#  include <ext/hash_set>
+#include <ext/hash_set>
 #else
-#  warning "missing hash_set"
-#  include <hash_set>
+#warning "missing hash_set"
+#include <hash_set>
 #endif
 
 // Hfst addition
-namespace SFST 
-{
+namespace SFST {
 // from <http://gcc.gnu.org/onlinedocs/libstdc++/manual/backwards.html>
 #ifdef __GNUC__
-#  if __GNUC__ < 3
-  using ::hash_map;
-  using ::hash_set;
-  using ::hash;
-#  elif __GNUC__ == 3 && __GNUC_MINOR__ == 0
-  using std::hash_map;
-  using std::hash_set;
-  using std::hash;
-#  else 
-  using __gnu_cxx::hash_map;
-  using __gnu_cxx::hash_set;
-  using __gnu_cxx::hash;
-#  endif
+#if __GNUC__ < 3
+using ::hash;
+using ::hash_map;
+using ::hash_set;
+#elif __GNUC__ == 3 && __GNUC_MINOR__ == 0
+using std::hash;
+using std::hash_map;
+using std::hash_set;
 #else
-  using std::hash_map;
-  using std::hash_set;
-  using std::hash;
+using __gnu_cxx::hash;
+using __gnu_cxx::hash_map;
+using __gnu_cxx::hash_set;
 #endif
-}
+#else
+using std::hash;
+using std::hash_map;
+using std::hash_set;
+#endif
+} // namespace SFST
 
 #endif
