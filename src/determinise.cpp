@@ -1,7 +1,7 @@
 
 /*******************************************************************/
 /*                                                                 */
-/*  FILE     determinise.C                                         */
+/*  FILE     determinise.cpp                                         */
 /*  MODULE   determinise                                           */
 /*  PROGRAM  SFST                                                  */
 /*  AUTHOR   Helmut Schmid, IMS, University of Stuttgart           */
@@ -27,12 +27,12 @@ namespace SFST {
 
   private:
     set<Node*> ht;
-  
+
   public:
     typedef set<Node*>::iterator iterator;
     NodeSet() {};
     void add( Node* );
-    bool insert(Node *node) { 
+    bool insert(Node *node) {
       pair<iterator, bool> result = ht.insert(node);
       return result.second;
     };
@@ -81,7 +81,7 @@ namespace SFST {
 
   private:
     struct hashf {
-      size_t operator()(const NodeArray *na) const { 
+      size_t operator()(const NodeArray *na) const {
 	size_t key=na->size() ^ na->is_final();
 	for( size_t i=0; i<na->size(); i++)
 	  key = (key<<1) ^ (size_t)(*na)[i];
@@ -100,7 +100,7 @@ namespace SFST {
     };
     typedef hash_map<NodeArray*, Node*, hashf, equalf> NodeMap;
     NodeMap hm;
-  
+
   public:
     typedef NodeMap::iterator iterator;
     ~NodeMapping();
@@ -108,7 +108,7 @@ namespace SFST {
     iterator end() { return hm.end(); };
     iterator find( NodeArray *na) { return hm.find( na ); };
     Node* &operator[]( NodeArray *na ) { return hm.operator[](na); };
-  
+
   };
 
 
@@ -191,11 +191,11 @@ namespace SFST {
 
   {
     Label2NodeSet lmap;
-    
+
     // for all nodes in the current set
     for( size_t i=0; i<na.size(); i++) {
       Node *n = na[i];    // old node
-    
+
       // For each non-epsilon transition, add the target node
       // to the respective node set.
       for( ArcsIter p(n->arcs(), ArcsIter::non_eps); p; p++ ) {
@@ -203,7 +203,7 @@ namespace SFST {
 	lmap[arc->label()].add(arc->target_node());
       }
     }
-  
+
     t.reserve(lmap.size());
     for( Label2NodeSet::iterator it=lmap.begin(); it!=lmap.end(); it++ ) {
       t.push_back(DTransition(it->first, new NodeArray( it->second )));
@@ -217,7 +217,7 @@ namespace SFST {
   /*                                                                 */
   /*******************************************************************/
 
-  static void determinise_node( NodeArray &na, Node *node, Transducer *a, 
+  static void determinise_node( NodeArray &na, Node *node, Transducer *a,
 				NodeMapping &map )
   {
     node->set_final(na.is_final());

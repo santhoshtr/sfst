@@ -1,6 +1,5 @@
 /*******************************************************************/
 /*                                                                 */
-/*  FILE     lowmem.C                                              */
 /*  MODULE   lowmem                                                */
 /*  PROGRAM  SFST                                                  */
 /*  AUTHOR   Helmut Schmid, IMS, University of Stuttgart           */
@@ -26,7 +25,7 @@ namespace SFST {
   /*                                                                 */
   /*******************************************************************/
 
-  void LowMemTransducer::analyze( const LMNode &node, 
+  void LowMemTransducer::analyze( const LMNode &node,
 				  vector<Character> &input, size_t ipos,
 				  Analysis &ca, vector<Analysis> &analyses )
   {

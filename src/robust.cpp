@@ -1,7 +1,6 @@
 
 /*******************************************************************/
 /*                                                                 */
-/*     File: robust.C                                              */
 /*   Author: Helmut Schmid                                         */
 /*  Purpose:                                                       */
 /*  Created: Wed Aug  3 08:49:16 2005                              */
@@ -35,7 +34,7 @@ namespace SFST {
     unsigned int position;   // number of processed input symbols
     float errors;            // errors accumulated so far
     int previous;            // back-pointer (for printing)
-  
+
     // contructor
     Path( unsigned int n, unsigned int p, float e, unsigned int pp )
     { arc_number = n; position = p; errors = e; previous = (int)pp; };
@@ -49,7 +48,7 @@ namespace SFST {
 
 
   class ActivePath {
-  public: 
+  public:
     size_t index;
     vector<Path> &path;
 
@@ -89,13 +88,13 @@ namespace SFST {
     };
 
     // get the highest ranked active search path
-    Path &best_active_path() { 
+    Path &best_active_path() {
       assert(active_path.size() > 0);
-      return path[active_path.begin()->index]; 
+      return path[active_path.begin()->index];
     };
 
     // pop the index of the next active path
-    size_t pop_active_path_index() { 
+    size_t pop_active_path_index() {
       assert(active_path.size() > 0);
       set<ActivePath>::iterator it = active_path.begin();
       size_t n = it->index;
@@ -124,7 +123,7 @@ namespace SFST {
 
   // trivial error functions for the beginning
 
-  float mismatch_error( Character c, Character c2) { 
+  float mismatch_error( Character c, Character c2) {
     return 1.0;
   };
   float deletion_error( Character c) { return 1.0; };
@@ -146,7 +145,7 @@ namespace SFST {
     // check whether the number of allowed errors is exceeded
     if (e > min_errors)
       return;
-  
+
     // store the new search path
     size_t sn=path.size();              // index of the new search path
     path.push_back(Path(arc, pos, e, pp)); // add the new path
@@ -170,7 +169,7 @@ namespace SFST {
   /*  Agenda::add_analysis                                           */
   /*                                                                 */
   /*******************************************************************/
-  
+
   void Agenda::add_analysis( int sn, CAnalysis &ana )
 
   {
@@ -180,14 +179,14 @@ namespace SFST {
       ana.push_back(cs.arc_number);
     }
   }
-  
+
 
   /*******************************************************************/
   /*                                                                 */
   /*  Agenda::extract_analyses                                       */
   /*                                                                 */
   /*******************************************************************/
-  
+
   void Agenda::extract_analyses( vector<CAnalysis> &analyses )
 
   {
@@ -202,13 +201,13 @@ namespace SFST {
   /*  CompactTransducer::robust_analyze_string                       */
   /*                                                                 */
   /*******************************************************************/
-  
-  float CompactTransducer::robust_analyze_string( char *string, 
+
+  float CompactTransducer::robust_analyze_string( char *string,
 						  vector<CAnalysis> &analyses,
 						  float ErrorsAllowed )
   {
     analyses.clear();
-  
+
     // convert the input string to a sequence of symbols
     vector<Character> input;
     alphabet.string2symseq( string, input );
@@ -230,24 +229,24 @@ namespace SFST {
       if (cs.errors == agenda.min_errors) {
 	unsigned int i;
 	// epsilon transitions
-	for( i=first_arc[state]; 
-	     i<first_arc[state+1] && label[i].upper_char() == Label::epsilon; 
+	for( i=first_arc[state];
+	     i<first_arc[state+1] && label[i].upper_char() == Label::epsilon;
 	     i++)
 	  {
 	    bool f = (cs.position==input.size() && finalp[target_node[i]]);
 	    agenda.add_path(i, cs.position, cs.errors, sn, f);
 	  }
-	
+
 	// non-epsilon transitions
 	// scan the next input symbol
 	if (cs.position < input.size()) {
 	  // find the set of arcs with matching upper character
-	  pair<Label*,Label*> range = 
-	    equal_range(label+i, label+first_arc[state+1], 
+	  pair<Label*,Label*> range =
+	    equal_range(label+i, label+first_arc[state+1],
 			Label(input[cs.position]), label_less());
 	  unsigned int from = (unsigned int)(range.first - label);
 	  unsigned int to   = (unsigned int)(range.second - label);
-	  
+
 	  // follow the non-epsilon transitions
 	  for( i=from; i<to; i++) {
 	    bool f = (cs.position+1==input.size() && finalp[target_node[i]]);
@@ -263,39 +262,39 @@ namespace SFST {
 	for( unsigned int i=first_arc[state]; i<first_arc[state+1]; i++ ) {
 	  Label l = label[i];               // label of the transition
 	  Character tc = l.upper_char();    // surface symbol
-	  
+
 	  if (cs.position == input.size()) {
 	    if (tc == Label::epsilon)  // epsilon transition
-	      agenda.add_path(i, cs.position, cs.errors, sn, 
+	      agenda.add_path(i, cs.position, cs.errors, sn,
 			      finalp[target_node[i]]);
-	    
+
 	    else  // insertion of symbol
 	      agenda.add_path(i, cs.position, cs.errors + insertion_error(tc),
 			      sn, finalp[target_node[i]]);
 	  }
-	  
+
 	  else {
 	    Character ic = input[cs.position];
-	    
+
 	    if (tc == Label::epsilon) // epsilon transition
 	      agenda.add_path(i, cs.position, cs.errors, sn, false);
 	    else if (tc == ic) { // matching symbols
 	      bool f=(cs.position+1==input.size() && finalp[target_node[i]]);
 	      agenda.add_path(i, cs.position+1, cs.errors, sn, f);
 	    }
-	    
+
 	    else {
 	      // symbol mismatch
 	      bool f=(cs.position+1==input.size() && finalp[target_node[i]]);
 	      agenda.add_path(i, cs.position+1, cs.errors+mismatch_error(tc,ic),
 			      sn, f);
-	      
+
 	      // deletion of symbol
-	      f = (cs.position+1==input.size() && 
+	      f = (cs.position+1==input.size() &&
 		   finalp[target_node[cs.arc_number]]);
 	      agenda.add_path(cs.arc_number, cs.position+1,
 			      cs.errors+deletion_error(ic), cs.previous, f);
-	      
+
 	      // insertion of symbol
 	      f = (cs.position==input.size() && finalp[target_node[i]]);
 	      agenda.add_path(i, cs.position, cs.errors + insertion_error(tc),

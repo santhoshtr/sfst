@@ -1,24 +1,23 @@
 /*******************************************************************/
 /*                                                                 */
-/*  FILE     fst-infl.C                                            */
-/*  MODULE   fst-infl                                              */
+/*  FILE     fst-match.cpp                                           */
+/*  MODULE   fst-match                                             */
 /*  PROGRAM  SFST                                                  */
 /*  AUTHOR   Helmut Schmid, IMS, University of Stuttgart           */
 /*                                                                 */
 /*******************************************************************/
 
-#include "fst.h"
+
+#include "compact.h"
 
 using std::cerr;
 using std::vector;
 
 using namespace SFST;
 
-const int BUFFER_SIZE=1000;
+const int BUFFER_SIZE=100000;
 
 bool Verbose=true;
-bool WithBrackets=true;
-vector<char*> Filenames;
 
 
 /*******************************************************************/
@@ -30,10 +29,8 @@ vector<char*> Filenames;
 void usage()
 
 {
-  cerr << "\nUsage: fst-infl [options] tfile [file [file]]\n\n";
+  cerr << "\nUsage: fst-infl [options] file [file [file]]\n\n";
   cerr << "Options:\n";
-  cerr << "-t tfile:  alternative transducer\n";
-  cerr << "-n:  Print multi-character symbols without angle brackets\n";
   cerr << "-h:  print this message\n";
   cerr << "-v:  print version information\n";
   cerr << "-q:  suppress status messages\n";
@@ -55,24 +52,13 @@ void get_flags( int *argc, char **argv )
       Verbose = false;
       argv[i] = NULL;
     }
-    else if (strcmp(argv[i],"-n") == 0) {
-      WithBrackets = false;
-      argv[i] = NULL;
-    }
     else if (strcmp(argv[i],"-h") == 0) {
       usage();
       argv[i] = NULL;
     }
     else if (strcmp(argv[i],"-v") == 0) {
-      printf("fst-infl version %s\n", SFSTVersion);
+      printf("fst-parse version %s\n", SFSTVersion);
       exit(0);
-    }
-    else if (i < *argc-1) {
-      if (strcmp(argv[i],"-t") == 0) {
-	Filenames.push_back(argv[i+1]);
-	argv[i] = NULL;
-	argv[++i] = NULL;
-      }
     }
   }
   // remove flags from the argument list
@@ -94,64 +80,62 @@ int main( int argc, char **argv )
 
 {
   FILE *file, *outfile;
-  vector<Transducer*> transducer;
 
   get_flags(&argc, argv);
   if (argc < 2)
     usage();
 
-  Filenames.push_back(argv[1]);
+  if ((file = fopen(argv[1],"rb")) == NULL) {
+    fprintf(stderr,"\nError: Cannot open transducer file %s\n\n", argv[1]);
+    exit(1);
+  }
+  if (Verbose)
+    cerr << "reading transducer...\n";
   try {
-    for( size_t i=0; i<Filenames.size(); i++ ) {
-      if ((file = fopen(Filenames[i],"rb")) == NULL) {
-	fprintf( stderr, "\nError: Cannot open transducer file %s\n\n",
-		 Filenames[i]);
-	exit(1);
-      }
-      if (Verbose)
-	cerr << "reading transducer from file \"" << Filenames[i] <<"\"...\n";
-      transducer.push_back(new Transducer(file));
-      fclose(file);
-      if (Verbose)
-	cerr << "finished.\n";
-    }
+    CompactTransducer a(file);
+    fclose(file);
+    if (Verbose)
+      cerr << "finished.\n";
 
     if (argc <= 2)
       file = stdin;
     else {
       if ((file = fopen(argv[2],"rt")) == NULL) {
-	fprintf(stderr,"Error: Cannot open input file %s\n\n", argv[2]);
+	fprintf(stderr,"\nError: Cannot open input file %s\n\n",argv[2]);
 	exit(1);
       }
     }
-      
+
     if (argc <= 3)
       outfile = stdout;
     else {
       if ((outfile = fopen(argv[3],"wt")) == NULL) {
-	fprintf(stderr,"Error: Cannot open output file %s\n\n", argv[3]);
+	fprintf(stderr,"\nError: Cannot open output file %s\n\n",argv[3]);
 	exit(1);
       }
     }
 
     char buffer[BUFFER_SIZE];
+    int N=0;
+    vector<char*> analyses;
     while (fgets(buffer, BUFFER_SIZE, file)) {
+      if (Verbose && ++N % 100 == 0)
+	fprintf(stderr,"\r%d", N);
       int l=(int)strlen(buffer)-1;
       if (buffer[l] == '\n')
 	buffer[l] = '\0';
-      fprintf(outfile, "> %s\n", buffer);
-      size_t i;
-      for( i=0; i<transducer.size(); i++ )
-	if (transducer[i]->analyze_string(buffer, outfile, WithBrackets))
-	  break;
-      if (i == transducer.size())
-	fprintf( outfile, "no result for %s\n", buffer);
+      char *s=buffer;
+      while (*s)
+	fputs(a.longest_match(s), outfile);
+      fputc('\n', outfile);
     }
   }
   catch (const char *p) {
     cerr << p << "\n";
     return 1;
   }
+  if (Verbose)
+    fputc('\n', stderr);
 
   return 0;
 }

@@ -1,6 +1,6 @@
 /*******************************************************************/
 /*                                                                 */
-/*  FILE     fst-infl3.C                                           */
+/*  FILE     fst-infl3.cpp                                           */
 /*  MODULE   fst-infl3                                             */
 /*  PROGRAM  SFST                                                  */
 /*  AUTHOR   Helmut Schmid, IMS, University of Stuttgart           */
@@ -130,7 +130,7 @@ int main( int argc, char **argv )
 	exit(1);
       }
     }
-      
+
     if (argc <= 3)
       outfile = stdout;
     else {
@@ -139,7 +139,7 @@ int main( int argc, char **argv )
 	exit(1);
       }
     }
-      
+
     char buffer[BUFFER_SIZE];
     int N=0;
     vector<Analysis> analyses;

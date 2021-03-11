@@ -1,6 +1,6 @@
 /*******************************************************************/
 /*                                                                 */
-/*  FILE     fst-compact.C                                         */
+/*  FILE     fst-compact.cpp                                         */
 /*  MODULE   fst-compact                                           */
 /*  PROGRAM  SFST                                                  */
 /*  AUTHOR   Helmut Schmid, IMS, University of Stuttgart           */
@@ -56,7 +56,7 @@ int main( int argc, char **argv )
     }
     n++;
   }
-  
+
   if (argc <= n)
     outfile = stdout;
   else {

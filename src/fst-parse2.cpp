@@ -1,7 +1,7 @@
 /*******************************************************************/
 /*                                                                 */
-/*  FILE     fst-lattice.C                                         */
-/*  MODULE   fst-lattice                                           */
+/*  FILE     fst-parse.cpp                                           */
+/*  MODULE   fst-parse                                             */
 /*  PROGRAM  SFST                                                  */
 /*  AUTHOR   Helmut Schmid, IMS, University of Stuttgart           */
 /*                                                                 */
@@ -11,18 +11,16 @@
 
 using std::cerr;
 using std::cout;
+using std::vector;
 
 using namespace SFST;
 
-namespace SFST 
-{
+#define BUFFER_SIZE 10000
 
-const int BUFFER_SIZE=1000;
+bool Debug=false;
+bool Verbose=false;
 
-int Quiet=0;
-int AnalysisOnly=0;
-
-}
+vector<char*> TFileNames;
 
 
 /*******************************************************************/
@@ -34,13 +32,13 @@ int AnalysisOnly=0;
 void usage()
 
 {
-  cerr << "\nUsage: fst-lattice [options] file [file [file]]\n\n";
+  cerr << "\nUsage: fst-parse [options] transducer [infile]\n\n";
   cerr << "Options:\n";
+  cerr << "-t t:  compose transducer t\n";
   cerr << "-h:  print this message\n";
-  cerr << "-v:  print version information\n";
-  cerr << "-a:  print analysis characters only\n";
   cerr << "-q:  suppress status messages\n";
-  cerr << "\nThis program analyses each line of the second argument file with the\ntransducer read from the first argument file and prints the result\nas a transducer in the same format as fst_print.\n\n";
+  cerr << "-v:  print version information\n";
+  cerr << "-d:  print debugging output\n";
   exit(1);
 }
 
@@ -56,11 +54,7 @@ void get_flags( int *argc, char **argv )
 {
   for( int i=1; i<*argc; i++ ) {
     if (strcmp(argv[i],"-q") == 0) {
-      Quiet = 1;
-      argv[i] = NULL;
-    }
-    else if (strcmp(argv[i],"-a") == 0) {
-      AnalysisOnly = 1;;
+      Verbose = false;
       argv[i] = NULL;
     }
     else if (strcmp(argv[i],"-h") == 0) {
@@ -68,8 +62,17 @@ void get_flags( int *argc, char **argv )
       argv[i] = NULL;
     }
     else if (strcmp(argv[i],"-v") == 0) {
-      printf("fst-lattice version %s\n", SFSTVersion);
+      printf("fst-parse2 version %s\n", SFSTVersion);
       exit(0);
+    }
+    else if (strcmp(argv[i],"-d") == 0) {
+      Debug = true;
+      argv[i] = NULL;
+    }
+    else if (i < (*argc)-1 && strcmp(argv[i],"-t") == 0) {
+      TFileNames.push_back(argv[i+1]);
+      argv[i++] = NULL;
+      argv[i] = NULL;
     }
   }
   // remove flags from the argument list
@@ -90,23 +93,36 @@ void get_flags( int *argc, char **argv )
 int main( int argc, char **argv )
 
 {
-  FILE *file, *outfile;
+  FILE *file;
 
   get_flags(&argc, argv);
-  if (argc < 2)
+  if (argc < 2 || argc > 3)
     usage();
 
-  if ((file = fopen(argv[1],"rb")) == NULL) {
-    fprintf(stderr,"\nError: Cannot open transducer file %s\n\n", argv[1]);
-    exit(1);
-  }
-  if (!Quiet)
-    cerr << "reading transducer...\n";
+  TFileNames.push_back(argv[1]);
+  vector<Transducer*> a;
   try {
-    Transducer a(file);
-    fclose(file);
-    if (!Quiet)
-      cerr << "finished.\n";
+    for( size_t i=0; i<TFileNames.size(); i++ ) {
+      if ((file = fopen(TFileNames[i],"rb")) == NULL) {
+	fprintf(stderr,"\nError: Cannot open transducer file \"%s\"\n\n",
+		TFileNames[i]);
+	exit(1);
+      }
+      if (Verbose)
+	fprintf(stderr,"reading transducer %s ...", TFileNames[i]);
+      Transducer *tmp = new Transducer(file);
+      fclose(file);
+      if (Verbose)
+	fputs("finished.\n",stderr);
+
+      // make sure that the alphabets are compatible
+      if (a.size() == 0)
+	a.push_back( tmp );
+      else {
+	a.push_back( &tmp->copy(false, &a.back()->alphabet) );
+	delete tmp;
+      }
+    }
 
     if (argc <= 2)
       file = stdin;
@@ -116,43 +132,39 @@ int main( int argc, char **argv )
 	exit(1);
       }
     }
-      
-    if (argc <= 3)
-      outfile = stdout;
-    else {
-      if ((outfile = fopen(argv[3],"wt")) == NULL) {
-	fprintf(stderr,"Error: Cannot open output file %s\n\n", argv[3]);
-	exit(1);
-      }
-    }
 
     char buffer[BUFFER_SIZE];
-    for( long n=0; fgets(buffer, BUFFER_SIZE, file); n++ ) {
-      if (!Quiet)
-	fprintf(stderr,"\r%ld",n);
-      int l=(int)strlen(buffer)-1;
-      if (buffer[l] == '\n')
-	buffer[l] = '\0';
+      while (fgets(buffer, BUFFER_SIZE, file)) {
+	int l=(int)strlen(buffer)-1;
+	  if (buffer[l] == '\n')
+	      buffer[l] = '\0';
 
-      Transducer *a1 = new Transducer(buffer, &a.alphabet);
-      Transducer *a2 = &(a || *a1);
-      delete a1;
-      if (AnalysisOnly) {
-	a1 = &(a2->lower_level());
-	delete a2;
-	a2 = a1;
+	  Transducer *t = new Transducer(buffer, &a.back()->alphabet, false);
+	  for( int i=(int)a.size()-1; i>=0; i-- ) {
+	    if (Debug) {
+	      cerr << "\n";
+	      cerr << *t;
+	    }
+	    Transducer *t2 = &(*a[i] || *t);
+	    delete t;
+	    t = t2;
+	  }
+	  Transducer *t2 = &t->lower_level();
+	  delete t;
+	  t = &t2->minimise();
+	  delete t2;
+	  if (Debug) {
+	    cerr << "result:\n";
+	    cerr << *t;
+	  }
+	  t->alphabet.copy(a[0]->alphabet);
+	  cout << *t;
+	  delete t;
       }
-      a1 = &(a2->minimise());
-      delete a2;
-      cout << "> " << buffer << "\n";
-      cout << *a1;
-      cout << "\n";
-      delete a1;
-    }
   }
   catch (const char *p) {
-    cerr << p << "\n";
-    return 1;
+      cerr << p << "\n";
+      return 1;
   }
 
   return 0;

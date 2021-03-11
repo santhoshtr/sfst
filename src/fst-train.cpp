@@ -1,7 +1,6 @@
 
 /*******************************************************************/
 /*                                                                 */
-/*     File: fst-train.C                                           */
 /*   Author: Helmut Schmid                                         */
 /*  Purpose: EM training of a transducer                           */
 /*  Created: Mon Aug  8 15:11:36 2005                              */
@@ -150,7 +149,7 @@ int main( int argc, char **argv )
       if (Verbose)
 	cerr << "finished.\n";
     }
-      
+
     if (argc <= 2)
       file = stdin;
     else {
@@ -190,7 +189,7 @@ int main( int argc, char **argv )
     }
     if (Verbose)
       fputc('\n', stderr);
-    
+
     for( size_t i=0; i<transducer.size(); i++ ) {
       char buffer[1000];
       FILE *outfile;

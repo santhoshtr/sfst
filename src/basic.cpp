@@ -1,7 +1,6 @@
 
 /*******************************************************************/
 /*                                                                 */
-/*  FILE     basic.C                                               */
 /*  MODULE   basic                                                 */
 /*  PROGRAM  SFST                                                  */
 /*  AUTHOR   Helmut Schmid, IMS, University of Stuttgart           */

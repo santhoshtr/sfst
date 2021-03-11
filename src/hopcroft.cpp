@@ -1,7 +1,6 @@
-  
+
 /*******************************************************************/
 /*                                                                 */
-/*  FILE     hopcroft.C                                            */
 /*  MODULE   hopcroft                                              */
 /*  PROGRAM  SFST                                                  */
 /*  AUTHOR   Helmut Schmid, IMS, University of Stuttgart           */
@@ -48,16 +47,16 @@ namespace SFST
   }
 #endif
 
-  
+
   /*****************  class Minimiser  *****************************/
-  
+
   class Minimiser {
-    
-    
+
+
     /*****************  class Transition  **************************/
-    
+
     class Transition {
-      
+
     public:
       Index source;
       Index next_for_target;
@@ -65,18 +64,18 @@ namespace SFST
       Label label;
 
       Transition( Index s, Label l, Index n ) {
-	source = s; 
-	label = l; 
-	next_for_target = n; 
-	next_for_label = undef; 
+	source = s;
+	label = l;
+	next_for_target = n;
+	next_for_label = undef;
       }
     };
-    
-    
+
+
     /*****************  class State  *******************************/
-    
+
     class State {
-      
+
     public:
       Index group;             // index of group to which this state belongs
       Index next_in_group;     // index of next state in group
@@ -84,43 +83,43 @@ namespace SFST
       Index first_transition;  // index of first transition with this
                                // state as target
 
-      State() { 
+      State() {
 	group = next_in_group = previous_in_group = undef;
-	first_transition = undef; 
+	first_transition = undef;
       }
     };
 
-   
+
     /*****************  class StateGroup  **************************/
-    
+
     class StateGroup {
-      
+
     public:
-      Index next;          // index of next source group 
+      Index next;          // index of next source group
       Index next_in_agenda;
       Index previous_in_agenda;
 
       Index size;          // number of states in this group
       Index first_state;   // pointer to first state
 
-      Index new_size;    
+      Index new_size;
       Index first_new_state;  // pointer to the set of intersection states
 
-      void init( Index i ) { 
+      void init( Index i ) {
 	next_in_agenda = i;
 	size = new_size = 0;
 	next = first_state = first_new_state = undef;
       }
       bool is_empty() {
-	return first_state == undef; 
+	return first_state == undef;
       }
     };
-    
-    
+
+
     /*****************  class Agenda  *****************************/
-    
+
     class Agenda {
-      
+
       static const Index bucket_count = (Index)(sizeof(Index) * 8);
       // the first "bucket_count" many groups are dummy groups
       // used as the agenda buckets
@@ -130,7 +129,7 @@ namespace SFST
     public:
 
       Agenda( vector<StateGroup> &g ) : group(g) {
-	// allocate some dummy groups for the agenda 
+	// allocate some dummy groups for the agenda
 	g.resize(bucket_count);
 	for( Index i=0; i<bucket_count; i++ )
 	  group[i].next_in_agenda = group[i].previous_in_agenda = i;
@@ -167,7 +166,7 @@ namespace SFST
 	Index previous = group[g].previous_in_agenda;
 	group[previous].next_in_agenda = next;
 	group[next].previous_in_agenda = previous;
-	
+
 	// unlink the result element
 	group[g].previous_in_agenda = group[g].next_in_agenda = g;
       }
@@ -186,7 +185,7 @@ namespace SFST
     Transducer &transducer;    // pointer to original transducer
     size_t number_of_nodes;    // node count in original t.
     size_t number_of_transitions; // transition count in original t.
-    vector<Node*> nodearray;   // maps indices to original transducer nodes 
+    vector<Node*> nodearray;   // maps indices to original transducer nodes
 
     // CAVEAT: Do not use references to elements of the group vector
     // because they become invalid when the group vector is resized.
@@ -203,7 +202,7 @@ namespace SFST
     Label2TransSet first_transition_for_label;
 
     Index first_source_group;   // linked list of source groups
-   
+
   public:
     Minimiser( Transducer &t );
     Transducer &result();
@@ -280,14 +279,14 @@ namespace SFST
 
     return *result;
   }
-  
-  
+
+
   /*******************************************************************/
   /*                                                                 */
   /*  Minimiser::Minimiser                                           */
   /*                                                                 */
   /*******************************************************************/
-  
+
   Minimiser::Minimiser( Transducer &t )
     : transducer(t), agenda(group)
 
@@ -318,7 +317,7 @@ namespace SFST
 	add_state( final, sourceID );
       else
 	add_state( nonfinal, sourceID );
-      
+
       for( ArcsIter p(node->arcs()); p; p++ ) {
 	Arc *arc=p;
 	add_transition( sourceID, arc->label(), arc->target_node()->index );
@@ -326,13 +325,13 @@ namespace SFST
     }
   }
 
-  
+
   /*******************************************************************/
   /*                                                                 */
   /*  Minimiser::link_state_in                                       */
   /*                                                                 */
   /*******************************************************************/
-  
+
   void Minimiser::link_state_in( Index &first_state, Index s )
 
   {
@@ -349,13 +348,13 @@ namespace SFST
     }
   }
 
-  
+
   /*******************************************************************/
   /*                                                                 */
   /*  Minimiser::add_state                                           */
   /*                                                                 */
   /*******************************************************************/
-  
+
   void Minimiser::add_state( Index g, Index s )
 
   {
@@ -364,13 +363,13 @@ namespace SFST
     link_state_in( group[g].first_state, s );
   }
 
-  
+
   /*******************************************************************/
   /*                                                                 */
   /*  Minimiser::link_state_out                                      */
   /*                                                                 */
   /*******************************************************************/
-  
+
   void Minimiser::link_state_out( Index &first_state, Index s )
 
   {
@@ -394,7 +393,7 @@ namespace SFST
   /*  Minimiser::remove_state                                        */
   /*                                                                 */
   /*******************************************************************/
-  
+
   void Minimiser::remove_state( Index g, Index s )
 
   {
@@ -408,7 +407,7 @@ namespace SFST
   /*  Minimiser::move_state_to_new                                   */
   /*                                                                 */
   /*******************************************************************/
-  
+
   void Minimiser::move_state_to_new( Index g, Index s )
 
   {
@@ -425,7 +424,7 @@ namespace SFST
   /*  Minimiser::merge_state_lists                                   */
   /*                                                                 */
   /*******************************************************************/
-  
+
   void Minimiser::merge_state_lists( Index g )
 
   {
@@ -452,7 +451,7 @@ namespace SFST
   /*  Minimiser::add_transition                                      */
   /*                                                                 */
   /*******************************************************************/
-  
+
   void Minimiser::add_transition( Index s, Label l, Index t )
 
   {
@@ -460,8 +459,8 @@ namespace SFST
     state[t].first_transition = (Index)transition.size();
     transition.push_back(T);
   }
-  
-  
+
+
   /*******************************************************************/
   /*                                                                 */
   /*  Minimiser::result                                              */
@@ -489,10 +488,10 @@ namespace SFST
       agenda.add(final, group[final].size);
       agenda.add(nonfinal, group[nonfinal].size);
     }
-    
+
     Index g;
     while ((g = agenda.pop()) != undef) {
-	    
+
       compute_source_states( g );
 
       // for all labels appearing on incoming transitions
@@ -509,13 +508,13 @@ namespace SFST
     return t;
   }
 
-  
+
   /*******************************************************************/
   /*                                                                 */
   /*  Minimiser::compute_source_states                               */
   /*                                                                 */
   /*******************************************************************/
-  
+
   void Minimiser::compute_source_states( Index g )
 
   {
@@ -527,7 +526,7 @@ namespace SFST
     do {
       State &S = state[s];
       // for all transitions T into S
-      for( Index t=S.first_transition; t!=undef; 
+      for( Index t=S.first_transition; t!=undef;
 	   t=transition[t].next_for_target )
 	{
 	  Transition &T = transition[t];
@@ -548,21 +547,21 @@ namespace SFST
     }
     while (s != first);
   }
-  
-  
+
+
   /*******************************************************************/
   /*                                                                 */
   /*  Minimiser::process_source_groups                               */
   /*                                                                 */
   /*******************************************************************/
-  
+
   void Minimiser::process_source_groups( Label l )
 
   {
     first_source_group = undef;
 
     // for all incoming transitions with label l
-    for( Index t = first_transition_for_label[l]; t != undef; 
+    for( Index t = first_transition_for_label[l]; t != undef;
 	 t = transition[t].next_for_label )
       {
 	// get the transition, source state, and source state group
@@ -575,7 +574,7 @@ namespace SFST
 	  group[g].next = first_source_group;
 	  first_source_group = S.group;
 	}
-	
+
 	move_state_to_new(g, T.source );
       }
 
@@ -589,14 +588,14 @@ namespace SFST
     return;
   }
 
-  
-  
+
+
   /*******************************************************************/
   /*                                                                 */
   /*  Minimiser::split                                               */
   /*                                                                 */
   /*******************************************************************/
-  
+
   void Minimiser::split( Index g, Label l )
 
   {
@@ -640,13 +639,13 @@ namespace SFST
   /*  Minimiser::build_transducer                                    */
   /*                                                                 */
   /*******************************************************************/
-  
+
   Transducer &Minimiser::build_transducer()
 
   {
     Transducer *t = new Transducer( true );
     t->alphabet.copy(transducer.alphabet);
-    
+
 
     // create the nodes of the new transducer
     vector<Node*> node(group.size(), NULL);

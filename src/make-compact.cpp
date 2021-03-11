@@ -1,6 +1,5 @@
 /*******************************************************************/
 /*                                                                 */
-/*  FILE     make-compact.C                                        */
 /*  MODULE   make-compact                                          */
 /*  PROGRAM  SFST                                                  */
 /*  AUTHOR   Helmut Schmid, IMS, University of Stuttgart           */
@@ -20,7 +19,7 @@ namespace SFST {
     int cv;
     Label label;
     unsigned int target_node;
-  
+
     bool operator< ( const ARC a ) const {
       return cv < a.cv;
     };
@@ -39,9 +38,9 @@ namespace SFST {
 
   {
     for( unsigned int n=0; n<number_of_nodes; n++) {
-      unsigned int from=first_arc[n]; 
-      unsigned int to=first_arc[n+1]; 
-      int l=to-from; 
+      unsigned int from=first_arc[n];
+      unsigned int to=first_arc[n+1];
+      int l=to-from;
 
       // copy the arcs to a temporary table
       ARC *arc=new ARC[l];
@@ -168,7 +167,7 @@ namespace SFST {
   {
     int k=0;
     unsigned char n=0;
-  
+
     for( size_t i=0; i<number_of_nodes; i++ ) {
       n = (unsigned char)(n << 1);
       if (finalp[i])

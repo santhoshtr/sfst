@@ -1,6 +1,6 @@
 /*******************************************************************/
 /*                                                                 */
-/*  FILE     fst-parse.C                                           */
+/*  FILE     fst-parse.cpp                                           */
 /*  MODULE   fst-parse                                             */
 /*  PROGRAM  SFST                                                  */
 /*  AUTHOR   Helmut Schmid, IMS, University of Stuttgart           */
@@ -10,7 +10,6 @@
 #include "fst.h"
 
 using std::cerr;
-using std::cout;
 using std::vector;
 
 using namespace SFST;
@@ -32,13 +31,14 @@ vector<char*> TFileNames;
 void usage()
 
 {
-  cerr << "\nUsage: fst-parse [options] transducer [infile]\n\n";
+  cerr << "\nUsage: fst-parse [options] transducer [infile [outfile]]\n\n";
   cerr << "Options:\n";
-  cerr << "-t t:  compose transducer t\n";
+  cerr << "-t t:  compose transducer t (At least one transducer needs to be specified by using \"option\" -t. The last transducer should be specified without -t.)\n";
   cerr << "-h:  print this message\n";
   cerr << "-q:  suppress status messages\n";
   cerr << "-v:  print version information\n";
   cerr << "-d:  print debugging output\n";
+  cerr << "\nExample: fst-parse -t trans1.a trans2.a input.txt output.txt\n\n";
   exit(1);
 }
 
@@ -62,7 +62,7 @@ void get_flags( int *argc, char **argv )
       argv[i] = NULL;
     }
     else if (strcmp(argv[i],"-v") == 0) {
-      printf("fst-parse2 version %s\n", SFSTVersion);
+      printf("fst-parse version %s\n", SFSTVersion);
       exit(0);
     }
     else if (strcmp(argv[i],"-d") == 0) {
@@ -93,10 +93,10 @@ void get_flags( int *argc, char **argv )
 int main( int argc, char **argv )
 
 {
-  FILE *file;
-    
+  FILE *file, *outfile;
+
   get_flags(&argc, argv);
-  if (argc < 2 || argc > 3)
+  if (argc < 2)
     usage();
 
   TFileNames.push_back(argv[1]);
@@ -104,7 +104,7 @@ int main( int argc, char **argv )
   try {
     for( size_t i=0; i<TFileNames.size(); i++ ) {
       if ((file = fopen(TFileNames[i],"rb")) == NULL) {
-	fprintf(stderr,"\nError: Cannot open transducer file \"%s\"\n\n", 
+	fprintf(stderr,"\nError: Cannot open transducer file \"%s\"\n\n",
 		TFileNames[i]);
 	exit(1);
       }
@@ -123,7 +123,7 @@ int main( int argc, char **argv )
 	delete tmp;
       }
     }
-    
+
     if (argc <= 2)
       file = stdin;
     else {
@@ -132,7 +132,15 @@ int main( int argc, char **argv )
 	exit(1);
       }
     }
-    
+    if (argc <= 3)
+      outfile = stdout;
+    else {
+      if ((outfile = fopen(argv[3],"wt")) == NULL) {
+	fprintf(stderr,"Error: Cannot open output file %s\n\n", argv[3]);
+	exit(1);
+      }
+    }
+
     char buffer[BUFFER_SIZE];
       while (fgets(buffer, BUFFER_SIZE, file)) {
 	int l=(int)strlen(buffer)-1;
@@ -158,7 +166,8 @@ int main( int argc, char **argv )
 	    cerr << *t;
 	  }
 	  t->alphabet.copy(a[0]->alphabet);
-	  cout << *t;
+	  if (!t->print_strings( outfile ))
+	    fprintf(outfile, "no analysis for \"%s\"\n", buffer);
 	  delete t;
       }
   }

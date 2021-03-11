@@ -1,7 +1,6 @@
 
 /*******************************************************************/
 /*                                                                 */
-/*  FILE     fst.C                                                 */
 /*  MODULE   fst                                                   */
 /*  PROGRAM  SFST                                                  */
 /*  AUTHOR   Helmut Schmid, IMS, University of Stuttgart           */
@@ -52,7 +51,7 @@ namespace SFST {
     for( arc=first_arcp; arc; arc=arc->next)
       if (arc->label() == l)
 	return arc->target_node();
-  
+
     return NULL;
   }
 
@@ -64,7 +63,7 @@ namespace SFST {
     for( arc=first_arcp; arc; arc=arc->next)
       if (arc->label() == l)
 	return arc->target_node();
-  
+
     return NULL;
   }
 
@@ -277,7 +276,7 @@ namespace SFST {
   /*                                                                 */
   /*******************************************************************/
 
-  Transducer::Transducer( istream &is, const Alphabet *a, bool verbose, 
+  Transducer::Transducer( istream &is, const Alphabet *a, bool verbose,
 			  bool lexcomments )
     : root(), mem()
   {
@@ -372,7 +371,7 @@ namespace SFST {
   /*                                                                 */
   /*******************************************************************/
 
-  void Transducer::store_symbols(Node *node, SymbolMap &symbol, 
+  void Transducer::store_symbols(Node *node, SymbolMap &symbol,
 				 LabelSet &labels)
   {
     if (!node->was_visited( vmark )) {
@@ -467,7 +466,7 @@ namespace SFST {
   /*                                                                 */
   /*******************************************************************/
 
-  void Transducer::enumerate_paths_node( Node *node, vector<Label> &path, 
+  void Transducer::enumerate_paths_node( Node *node, vector<Label> &path,
 					 NodeHashSet &previous,
 					 vector<Transducer*> &result )
   {
@@ -540,7 +539,7 @@ namespace SFST {
       Arc *arc=i;
       Label l=arc->label();
       alphabet.write_label(l, buffer, &p, with_brackets);
-      result |= print_strings_node(arc->target_node(), buffer, p, 
+      result |= print_strings_node(arc->target_node(), buffer, p,
 				   file, with_brackets );
     }
     node->set_forward(NULL);
@@ -632,7 +631,7 @@ namespace SFST {
       if (!arc->label().is_epsilon())
 	alphabet.insert(arc->label());
       complete(arc->target_node(), alphabet, vmark);
-    }  
+    }
   }
 
 
@@ -706,7 +705,7 @@ namespace SFST {
     // write final flag
     char c=node->is_final();
     fwrite(&c,sizeof(c),1,file);
-  
+
     // write the number of arcs
     int nn = node->arcs()->size();
     if (nn > 65535)
@@ -744,7 +743,7 @@ namespace SFST {
     if (!node->was_visited( vmark )) {
 
       store_node_info( file, node );
-  
+
       // write the arcs
       for( ArcsIter p(node->arcs()); p; p++ ) {
 	Arc *arc=p;
@@ -763,11 +762,11 @@ namespace SFST {
   /*                                                                 */
   /*******************************************************************/
 
-  static void store_lowmem_node( FILE *file, Node *node, 
+  static void store_lowmem_node( FILE *file, Node *node,
 				 vector<unsigned int> &startpos)
   {
     store_node_info( file, node );
-  
+
     // write the arcs
     for( ArcsIter p(node->arcs()); p; p++ ) {
       Arc *arc=p;
@@ -910,7 +909,7 @@ namespace SFST {
 
   {
     static char message[1000];
-    sprintf(message, "Error: in line %u of text transducer file", 
+    sprintf(message, "Error: in line %u of text transducer file",
 	    (unsigned int)line);
     throw message;
   }
@@ -964,14 +963,14 @@ namespace SFST {
     // skip over following whitespace
     while (*q == ' ' || *q == '\t' || *q == '\n' || *q == '\r')
       q++;
-  
+
     if (*q == 0)
       s = NULL; // end of string was reached
     else
       s = q;  // move the string pointer s
 
     *p = 0; // mark the end of the result string
-  
+
     return result;
   }
 
@@ -1046,7 +1045,7 @@ namespace SFST {
 
   /* Find the corresponding node in 'copy_tr' for 'node'. If needed, create a new node to 'copy_tr'
      and update 'mapper' accordingly. */
-  
+
   Node *node_in_copy_tr( Node *node, Transducer *copy_tr, map<int, Node*> &mapper ) {
     int node_index = (int)node->index;  // node index in original transducer
     map<int,Node*>::iterator it = mapper.find(node_index); // iterator to associated node in copy_tr
@@ -1059,7 +1058,7 @@ namespace SFST {
     }
     else
       return it->second;
-  } 
+  }
 
 
   /*******************************************************************/
@@ -1085,7 +1084,7 @@ namespace SFST {
       if (arc.label().is_epsilon()) {
 	// 'forward', which is originally NULL, is used as a flag
 	// for detecting epsilon transition loops
-	if (search_node->forward() != copy_tr_start_node) { 
+	if (search_node->forward() != copy_tr_start_node) {
 	  search_node->set_forward(copy_tr_start_node);  // set epsilon flag
 	  if (arc.target_node()->is_final())
 	    copy_tr_start_node->set_final(true);
@@ -1096,7 +1095,7 @@ namespace SFST {
 
       else {
 	// target node in copy_tr
-	Node *copy_tr_end_node = 
+	Node *copy_tr_end_node =
 	  node_in_copy_tr(arc.target_node(), copy_tr, mapper);
 	// add arc to copy_tr
 	copy_tr_start_node->add_arc( Label(arc.label().lower_char(),
@@ -1134,12 +1133,12 @@ namespace SFST {
     // set copy_tr root node final, if needed
     if (root_node()->is_final())
       copy_tr->root_node()->set_final(true);
-    // associate the root_nodes in this and copy_tr 
+    // associate the root_nodes in this and copy_tr
     // (node indexing for root_node is zero)
     mapper[0] = copy_tr->root_node();
 
     copy_nodes(root_node(), copy_tr, copy_tr->root_node(), mapper);
-    incr_vmark();	
+    incr_vmark();
 
     return *copy_tr;
   }

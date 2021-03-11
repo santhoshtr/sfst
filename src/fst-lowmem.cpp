@@ -1,6 +1,6 @@
 /*******************************************************************/
 /*                                                                 */
-/*  FILE     fst-lowmem.C                                          */
+/*  FILE     fst-lowmem.cpp                                          */
 /*  MODULE   fst-lowmem                                            */
 /*  PROGRAM  SFST                                                  */
 /*  AUTHOR   Helmut Schmid, IMS, University of Stuttgart           */
@@ -11,7 +11,7 @@
 
 using std::cerr;
 
-using namespace SFST; 
+using namespace SFST;
 
 bool Switch=false;
 
@@ -41,7 +41,7 @@ int main( int argc, char **argv )
       exit(0);
     }
   }
-    
+
   int n = 1;
   if (argc > 1 && strcmp(argv[1],"-s") == 0) {
     Switch = true;
@@ -56,7 +56,7 @@ int main( int argc, char **argv )
     }
     n++;
   }
-  
+
   if (argc <= n)
     outfile = stdout;
   else {

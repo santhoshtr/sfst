@@ -1,6 +1,5 @@
 /*******************************************************************/
 /*                                                                 */
-/*  FILE     generate.C                                            */
 /*  MODULE   generate                                              */
 /*  PROGRAM  SFST                                                  */
 /*  AUTHOR   Helmut Schmid, IMS, University of Stuttgart           */
@@ -16,17 +15,17 @@ using std::vector;
 namespace SFST {
 
   /********************  Gen  ***************************************/
-  
+
   class Gen {
   public:
     Node *node;
     Index previous;
     Label label;
 
-    Gen( Node *n, Label l=Label::epsilon , Index p=undef ) 
+    Gen( Node *n, Label l=Label::epsilon , Index p=undef )
       : node(n), previous(p), label(l) {}
 
-    void print( vector<Gen> &paths, FILE *file, Alphabet &alphabet, 
+    void print( vector<Gen> &paths, FILE *file, Alphabet &alphabet,
 		OutputType ot )
     {
       if (previous != undef) {
@@ -57,7 +56,7 @@ namespace SFST {
   {
     vector<Gen> paths;
     paths.push_back(Gen(root_node()));
- 
+
     int n=0;
     for( size_t i=0; i<paths.size(); i++ ) {
       // fprintf(stderr,">>> %lu\n", i);

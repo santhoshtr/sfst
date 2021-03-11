@@ -1,6 +1,6 @@
 /*******************************************************************/
 /*                                                                 */
-/*  FILE     fst-infl2.C                                           */
+/*  FILE     fst-infl2.cpp                                           */
 /*  MODULE   fst-infl2                                             */
 /*  PROGRAM  SFST                                                  */
 /*  AUTHOR   Helmut Schmid, IMS, University of Stuttgart           */
@@ -12,7 +12,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <sys/types.h> 
+#include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 
@@ -114,7 +114,7 @@ void get_flags( int *argc, char **argv )
           exit(1);
         }
 	if (Threshold <= 0.0 || Threshold > 100.0) {
-          fprintf(stderr,"Argument of option -%% is out of range: %s\n", 
+          fprintf(stderr,"Argument of option -%% is out of range: %s\n",
 		  argv[i+1]);
           exit(1);
 	}
@@ -129,7 +129,7 @@ void get_flags( int *argc, char **argv )
           exit(1);
         }
 	if (MaxError <= 0.0) {
-          fprintf(stderr,"Argument of option -e is out of range: %s\n", 
+          fprintf(stderr,"Argument of option -e is out of range: %s\n",
 		  argv[i+1]);
           exit(1);
 	}
@@ -197,10 +197,10 @@ void annotate_data( int sockfd )
   while ((word = next_token( sockfd )) != NULL) {
     sprintf(buffer, "> %s\n", word);
     write( sockfd, buffer, strlen(buffer) );
-    
+
     for( size_t i=0; i<transducer.size(); i++ ) {
       transducer[i]->analyze_string(word, analyses);
-      
+
       if (analyses.size() == 0 && MaxError > 0.0)
 	transducer[i]->robust_analyze_string(word, analyses, MaxError);
 
@@ -294,9 +294,9 @@ int main( int argc, char **argv )
       if (Verbose)
 	cerr << "finished.\n";
     }
-      
+
     Socket socket( socketno );
-    
+
     fprintf(stderr, "listening to the socket ...");
     for(;;) {
       /* wait for the next client */
@@ -305,9 +305,9 @@ int main( int argc, char **argv )
 	fprintf(stderr, "ERROR on accept\n");
 	return 1;
       }
-      
+
       annotate_data( sockfd );
-      
+
       shutdown( sockfd, SHUT_RDWR );
       close( sockfd );
     }
@@ -318,6 +318,6 @@ int main( int argc, char **argv )
   }
   if (Verbose)
     fprintf(stderr, " finished\n");
-  
+
   return 0;
 }

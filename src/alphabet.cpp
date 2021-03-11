@@ -1,7 +1,6 @@
 
 /*******************************************************************/
 /*                                                                 */
-/*  FILE     alphabet.C                                            */
 /*  MODULE   alphabet                                              */
 /*  PROGRAM  SFST                                                  */
 /*  AUTHOR   Helmut Schmid, IMS, University of Stuttgart           */
@@ -53,7 +52,7 @@ namespace SFST {
 
   Alphabet::Alphabet()
 
-  { 
+  {
     utf8 = false;
     add(EpsilonString, Label::epsilon);
   }
@@ -117,7 +116,7 @@ namespace SFST {
 	add(symbol, i);
 	return i;
       }
-  
+
     throw "Error: too many symbols in transducer definition";
   }
 
@@ -162,7 +161,7 @@ namespace SFST {
 	code.push_back(c);
       }
     }
-    
+
     for( LabelSet::const_iterator it=begin(); it!=end(); it++ ) {
       Label l=*it;
       if (!is_marker_symbol(code2symbol(l.upper_char())) &&
@@ -199,7 +198,7 @@ namespace SFST {
 	add(symbol, i);
 	return i;
       }
-  
+
     throw "Error: too many symbols in transducer definition";
   }
 
@@ -251,7 +250,7 @@ namespace SFST {
   /*                                                                 */
   /*******************************************************************/
 
-  void Alphabet::write_char( Character c, char *buffer, int *pos, 
+  void Alphabet::write_char( Character c, char *buffer, int *pos,
 			     bool with_brackets) const
   {
     const char *s = code2symbol(c);
@@ -304,7 +303,7 @@ namespace SFST {
   /*                                                                 */
   /*******************************************************************/
 
-  void Alphabet::write_label( Label l, char *buffer, int *pos, 
+  void Alphabet::write_label( Label l, char *buffer, int *pos,
 			      bool with_brackets ) const
   {
     Character lc=l.lower_char();
@@ -662,7 +661,7 @@ namespace SFST {
       char buffer[BUFFER_SIZE];
       Character c;
       read_num(&c, sizeof(c), file);
-      if (!read_string(buffer, BUFFER_SIZE, file) || 
+      if (!read_string(buffer, BUFFER_SIZE, file) ||
 	  feof(file) || ferror(file))
 	throw "Error1 occurred while reading alphabet!\n";
       add_symbol(buffer, c);
@@ -752,8 +751,8 @@ namespace SFST {
 	// Is it a participle
 	if (c != Label::epsilon) {
 	  sym = write_char(c);
-	  if (strcmp(sym,"<OLDORTH>") == 0 || 
-	      strcmp(sym,"<NEWORTH>") == 0 || 
+	  if (strcmp(sym,"<OLDORTH>") == 0 ||
+	      strcmp(sym,"<NEWORTH>") == 0 ||
 	      strcmp(sym,"<SUFF>") == 0) {
 	    for( k++; k<ana.size(); k++ )
 	      if ((c = ana[k].lower_char()) != Label::epsilon)
@@ -843,7 +842,7 @@ namespace SFST {
     result = new char[ch.size()];
     for( size_t i=0; i<ch.size(); i++ )
       result[i] = ch[i];
-  
+
     return result;
   }
 

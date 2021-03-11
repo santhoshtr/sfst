@@ -1,6 +1,6 @@
 /*******************************************************************/
 /*                                                                 */
-/*  FILE     fst-infl2.C                                           */
+/*  FILE     fst-infl2.cpp                                           */
 /*  MODULE   fst-infl2                                             */
 /*  PROGRAM  SFST                                                  */
 /*  AUTHOR   Helmut Schmid, IMS, University of Stuttgart           */
@@ -91,7 +91,7 @@ char *convert_control_chars( char *s )
 	*(new_s++) = '\\';
       else
 	*(new_s++) = *old_s;
-    } 
+    }
     else
       *(new_s++) = *old_s;
   }
@@ -161,7 +161,7 @@ void get_flags( int *argc, char **argv )
           exit(1);
         }
 	if (Threshold <= 0.0 || Threshold > 100.0) {
-          fprintf(stderr,"Argument of option -%% is out of range: %s\n", 
+          fprintf(stderr,"Argument of option -%% is out of range: %s\n",
 		  argv[i+1]);
           exit(1);
 	}
@@ -176,7 +176,7 @@ void get_flags( int *argc, char **argv )
           exit(1);
         }
 	if (MaxError <= 0.0) {
-          fprintf(stderr,"Argument of option -e is out of range: %s\n", 
+          fprintf(stderr,"Argument of option -e is out of range: %s\n",
 		  argv[i+1]);
           exit(1);
 	}
@@ -219,7 +219,7 @@ static bool identical( CAnalysis &ana1, CAnalysis &ana2 )
 /*******************************************************************/
 
 static void merge_analyses( vector<CAnalysis> &analyses )
-  
+
 {
   size_t n=0;
   for( size_t i=0; i<analyses.size(); i++) {
@@ -283,7 +283,7 @@ int main( int argc, char **argv )
       if (Verbose)
 	cerr << "finished.\n";
     }
-      
+
     if (argc <= 2)
       file = stdin;
     else {
@@ -292,7 +292,7 @@ int main( int argc, char **argv )
 	exit(1);
       }
     }
-      
+
     if (argc <= 3)
       outfile = stdout;
     else {
@@ -301,7 +301,7 @@ int main( int argc, char **argv )
 	exit(1);
       }
     }
-      
+
     char buffer[BUFFER_SIZE];
     int N=0;
     vector<CAnalysis> analyses;
@@ -320,7 +320,7 @@ int main( int argc, char **argv )
 	transducer[i]->analyze_string(buffer, analyses);
 
 	if (analyses.size() == 0 && MaxError > 0.0) {
-	  float f=transducer[i]->robust_analyze_string(buffer, analyses, 
+	  float f=transducer[i]->robust_analyze_string(buffer, analyses,
 						       MaxError);
 	  // merge identical transducer paths
 	  merge_analyses( analyses );
