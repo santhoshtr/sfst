@@ -924,10 +924,11 @@ Transducer *Interface::cp(Range *lower_range, Range *upper_range)
   Transducer *t = make_transducer(lower_range, upper_range);
   for (ArcsIter p(t->root_node()->arcs()); p; p++) {
     Arc *arc = p;
-    if (TheAlphabet.find(arc->label()) == TheAlphabet.end())
+    if (TheAlphabet.find(arc->label()) == TheAlphabet.end()) {
       fprintf(stderr,
               "Warning: 2-level rule mapping \"%s\" not defined in alphabet!\n",
-              TheAlphabet.write_label(arc->label()));
+              TheAlphabet.write_label(arc->label()).c_str());
+    }
   }
 
   return t;

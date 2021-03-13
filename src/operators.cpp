@@ -1022,7 +1022,7 @@ Transducer &Transducer::level(Level level)
 
   for (Alphabet::iterator it = alphabet.begin(); it != alphabet.end(); it++) {
     Character c = it->get_char(level);
-    if (alphabet.code2symbol(c) != NULL)
+    if (alphabet.code2symbol(c) != "NULL")
       na->alphabet.add_symbol(alphabet.code2symbol(c), c);
     na->alphabet.insert(Label(c));
   }

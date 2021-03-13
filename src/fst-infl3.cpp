@@ -147,7 +147,7 @@ int main(int argc, char **argv)
         if (analyses.size() > 0) {
           Alphabet &a = transducer[i]->alphabet;
           for (size_t k = 0; k < analyses.size(); k++) {
-            fputs(a.print_analysis(analyses[k], BothLayers), outfile);
+            fputs(a.print_analysis(analyses[k], BothLayers).c_str(), outfile);
             fputc('\n', outfile);
           }
           break;

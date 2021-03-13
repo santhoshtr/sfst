@@ -364,16 +364,16 @@ void Transducer::store_symbols(Node *node, SymbolMap &symbol,
 
       Character c = l.upper_char();
       if (symbol.find(c) == symbol.end()) {
-        const char *s = alphabet.code2symbol(c);
-        if (s)
-          symbol[c] = fst_strdup(s);
+        std::string s = alphabet.code2symbol(c);
+        if (s != "NULL")
+          symbol[c] = s;
       }
 
       c = l.lower_char();
       if (symbol.find(c) == symbol.end()) {
-        const char *s = alphabet.code2symbol(c);
-        if (s)
-          symbol[c] = fst_strdup(s);
+        std::string s = alphabet.code2symbol(c);
+        if (s != "NULL")
+          symbol[c] = s;
       }
 
       store_symbols(arc->target_node(), symbol, labels);
@@ -397,7 +397,7 @@ void Transducer::minimise_alphabet()
   alphabet.clear();
   for (SymbolMap::iterator it = symbols.begin(); it != symbols.end(); it++) {
     alphabet.add_symbol(it->second, it->first);
-    free(it->second);
+    // free(it->second);
   }
   for (LabelSet::iterator it = labels.begin(); it != labels.end(); it++)
     alphabet.insert(*it);
@@ -486,8 +486,7 @@ bool Transducer::enumerate_paths(vector<Transducer *> &result)
 /*                                                                 */
 /*******************************************************************/
 
-int Transducer::print_strings_node(Node *node, char *buffer, int pos,
-                                   FILE *file, bool with_brackets) {
+int Transducer::print_strings_node(Node *node, FILE *file, bool with_brackets) {
   int result = 0;
 
   if (node->was_visited(vmark)) {
@@ -497,20 +496,16 @@ int Transducer::print_strings_node(Node *node, char *buffer, int pos,
     }
     node->set_forward(node); // used like a flag for loop detection
   }
-  if (pos == BUFFER_SIZE)
-    throw "Output string in function print_strings_node is too long";
   if (node->is_final()) {
-    buffer[pos] = '\0';
-    fprintf(file, "%s\n", buffer);
-    result = 1;
+    fprintf(file, "\n");
+    return 1;
   }
   for (ArcsIter i(node->arcs()); i; i++) {
-    int p = pos;
     Arc *arc = i;
     Label l = arc->label();
-    alphabet.write_label(l, buffer, &p, with_brackets);
-    result |=
-        print_strings_node(arc->target_node(), buffer, p, file, with_brackets);
+    std::string label = alphabet.write_label(l, with_brackets);
+    fprintf(file, "%s", label.c_str());
+    result |= print_strings_node(arc->target_node(), file, with_brackets);
   }
   node->set_forward(NULL);
 
@@ -526,9 +521,8 @@ int Transducer::print_strings_node(Node *node, char *buffer, int pos,
 int Transducer::print_strings(FILE *file, bool with_brackets)
 
 {
-  char buffer[BUFFER_SIZE];
   incr_vmark();
-  return print_strings_node(root_node(), buffer, 0, file, with_brackets);
+  return print_strings_node(root_node(), file, with_brackets);
 }
 
 /*******************************************************************/

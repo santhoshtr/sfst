@@ -30,13 +30,13 @@ public:
     if (previous != undef) {
       paths[previous].print(paths, file, alphabet, ot);
       if (ot == Joint)
-        fputs(alphabet.write_label(label), file);
+        fputs(alphabet.write_label(label).c_str(), file);
       else if (ot == UpperOnly) {
         if (label.upper_char() != Label::epsilon)
-          fputs(alphabet.write_char(label.upper_char()), file);
+          fputs(alphabet.write_char(label.upper_char()).c_str(), file);
       } else if (ot == LowerOnly) {
         if (label.lower_char() != Label::epsilon)
-          fputs(alphabet.write_char(label.lower_char()), file);
+          fputs(alphabet.write_char(label.lower_char()).c_str(), file);
       }
     }
   }

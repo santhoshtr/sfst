@@ -228,7 +228,7 @@ private:
   size_t transition_count;
 
   typedef set<Label, Label::label_cmp> LabelSet;
-  typedef unordered_map<Character, char *> SymbolMap;
+  typedef unordered_map<Character, std::string> SymbolMap;
 
   void incr_vmark(void) {
     if (++vmark == 0) {
@@ -247,7 +247,7 @@ private:
   bool compare_nodes(Node *node, Node *node2, Transducer &a2);
   void map_nodes(Node *node, Node *node2, Transducer *a, Level level);
   void freely_insert_at_node(Node *node, Label l);
-  int print_strings_node(Node *node, char *buffer, int pos, FILE *file, bool);
+  int print_strings_node(Node *node, FILE *file, bool);
   bool infinitely_ambiguous_node(Node *);
   bool is_cyclic_node(Node *, NodeHashSet &visited);
   bool is_automaton_node(Node *);

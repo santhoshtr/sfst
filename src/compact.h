@@ -84,10 +84,10 @@ public:
 
   void compute_probs(std::vector<CAnalysis> &analyses,
                      std::vector<double> &prob);
-  char *print_analysis(CAnalysis &ana);
+  std::string print_analysis(CAnalysis &ana);
 
   // longest-match analysis
-  const char *longest_match(char *&);
+  std::string longest_match(char *&);
 
   // EM training
   bool train2(char *s, std::vector<double> &arcfreq,
