@@ -23,30 +23,17 @@ Transducer *transducer;
  */
 const char *transduce(char input[], int mode)
 {
-    FILE *temp_file = std::tmpfile();
-
     // Analyse or generate transducer output and write to file
+    std::string result;
     if (mode == ANALYSE_MODE)
     {
-        transducer->analyze_string(input, temp_file, true);
+        result= transducer->analyze_string(input, true);
     }
     else if (mode == GENERATE_MODE)
     {
-        transducer->generate_string(input, temp_file, true);
+        result = transducer->generate_string(input, true);
     }
-    std::rewind(temp_file);
-    // Read transducer output from file
-    char c;
-    std::ostringstream oss(std::ostringstream::out);
-    c = fgetc(temp_file);
-    while (c != EOF)
-    {
-        oss.put(c);
-        c = fgetc(temp_file);
-    }
-    fclose(temp_file);
-
-    return oss.str().c_str();
+    return result.c_str();
 }
 
 /**

@@ -480,14 +480,8 @@ bool Transducer::enumerate_paths(vector<Transducer *> &result)
   return false;
 }
 
-/*******************************************************************/
-/*                                                                 */
-/*  Transducer::print_strings_node                                 */
-/*                                                                 */
-/*******************************************************************/
-
-int Transducer::print_strings_node(Node *node, FILE *file, bool with_brackets) {
-  int result = 0;
+std::string Transducer::to_string(Node *node, bool with_brackets) {
+  std::string result = "";
 
   if (node->was_visited(vmark)) {
     if (node->forward() != NULL) { // cycle detected
@@ -497,19 +491,30 @@ int Transducer::print_strings_node(Node *node, FILE *file, bool with_brackets) {
     node->set_forward(node); // used like a flag for loop detection
   }
   if (node->is_final()) {
-    fprintf(file, "\n");
-    return 1;
+    return result;
   }
   for (ArcsIter i(node->arcs()); i; i++) {
     Arc *arc = i;
     Label l = arc->label();
-    std::string label = alphabet.write_label(l, with_brackets);
-    fprintf(file, "%s", label.c_str());
-    result |= print_strings_node(arc->target_node(), file, with_brackets);
+    result += alphabet.write_label(l, with_brackets);
+    ;
+    result += to_string(arc->target_node(), with_brackets);
   }
   node->set_forward(NULL);
 
   return result;
+}
+
+/*******************************************************************/
+/*                                                                 */
+/*  Transducer::print_strings_node                                 */
+/*                                                                 */
+/*******************************************************************/
+
+int Transducer::print_strings_node(Node *node, FILE *file, bool with_brackets) {
+  std::string result = to_string(node, with_brackets);
+  fprintf(file, "%s\n", result.c_str());
+  return result.empty() == true ? 0 : 1;
 }
 
 /*******************************************************************/
@@ -531,9 +536,7 @@ int Transducer::print_strings(FILE *file, bool with_brackets)
 /*                                                                 */
 /*******************************************************************/
 
-bool Transducer::analyze_string(char *string, FILE *file, bool with_brackets)
-
-{
+std::string Transducer::analyze_string(char *string, bool with_brackets) {
   vector<Character> input;
   alphabet.string2symseq(string, input);
   vector<Label> labels;
@@ -548,9 +551,16 @@ bool Transducer::analyze_string(char *string, FILE *file, bool with_brackets)
   delete a3;
 
   a2->alphabet.copy(alphabet);
-  bool result = a2->print_strings(file, with_brackets);
-  delete a2;
-  return result;
+  return a2->to_string(a2->root_node(), with_brackets);
+}
+
+bool Transducer::analyze_string(char *string, FILE *file, bool with_brackets)
+
+{
+  std::string analysis = analyze_string(string, with_brackets);
+  fprintf(file, "%s\n", analysis.c_str());
+  bool result = analysis.empty();
+  return !result;
 }
 
 /*******************************************************************/
@@ -559,7 +569,7 @@ bool Transducer::analyze_string(char *string, FILE *file, bool with_brackets)
 /*                                                                 */
 /*******************************************************************/
 
-bool Transducer::generate_string(char *string, FILE *file, bool with_brackets)
+std::string Transducer::generate_string(char *string, bool with_brackets)
 
 {
   Transducer a1(string, &alphabet, false);
@@ -570,9 +580,15 @@ bool Transducer::generate_string(char *string, FILE *file, bool with_brackets)
   delete a3;
 
   a2->alphabet.copy(alphabet);
-  bool result = a2->print_strings(file, with_brackets);
-  delete a2;
-  return result;
+  return a2->to_string(a2->root_node(), with_brackets);
+}
+
+bool Transducer::generate_string(char *string, FILE *file, bool with_brackets)
+
+{
+  std::string generated = generate_string(string, with_brackets);
+  fprintf(file, "%s\n", generated.c_str());
+  return !generated.empty();
 }
 
 /*******************************************************************/
@@ -632,6 +648,35 @@ static void print_node(ostream &s, Node *node, VType vmark, Alphabet &abc)
       print_node(s, arc->target_node(), vmark, abc);
     }
   }
+}
+
+/*******************************************************************/
+/*                                                                 */
+/*  print_node                                                     */
+/*                                                                 */
+/*******************************************************************/
+
+static std::string print_node(Node *node, VType vmark, Alphabet &abc)
+
+{
+  std::string result = "";
+  if (!node->was_visited(vmark)) {
+    Arcs *arcs = node->arcs();
+    for (ArcsIter p(arcs); p; p++) {
+      Arc *arc = p;
+      result += node->index + "\t" + arc->target_node()->index;
+      result += "\t" + abc.write_char(arc->label().lower_char());
+      result += "\t" + abc.write_char(arc->label().upper_char());
+      result += "\n";
+    }
+    if (node->is_final())
+      result += node->index + "\n";
+    for (ArcsIter p(arcs); p; p++) {
+      Arc *arc = p;
+      result += print_node(arc->target_node(), vmark, abc);
+    }
+  }
+  return result;
 }
 
 /*******************************************************************/

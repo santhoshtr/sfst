@@ -313,8 +313,11 @@ public:
   std::pair<size_t, size_t> nodeindexing(vector<Node *> *nodearray = NULL);
 
   int print_strings(FILE *, bool with_brackets = true); // enumerate all strings
+  std::string to_string(Node *node, bool with_brackets);
 
+  std::string analyze_string(char *s, bool with_brackets = true);
   bool analyze_string(char *s, FILE *file, bool with_brackets = true);
+  std::string generate_string(char *s, bool with_brackets = true);
   bool generate_string(char *s, FILE *file, bool with_brackets = true);
   void generate(FILE *file, int max = -1, OutputType ot = Joint);
 
