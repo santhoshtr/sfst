@@ -14,6 +14,8 @@
 
 #include <limits.h>
 
+#include <algorithm>
+
 #include "compact.h"
 
 namespace SFST {
@@ -395,7 +397,7 @@ void CompactTransducer::longest_match2(unsigned int n, char *string, int l,
 /*                                                                 */
 /*******************************************************************/
 
-char *CompactTransducer::print_analysis(CAnalysis &cana)
+std::string CompactTransducer::print_analysis(CAnalysis &cana)
 
 {
   Analysis ana;
@@ -409,7 +411,7 @@ char *CompactTransducer::print_analysis(CAnalysis &cana)
 /*                                                                 */
 /*******************************************************************/
 
-const char *CompactTransducer::longest_match(char *&string)
+std::string CompactTransducer::longest_match(char *&string)
 
 {
   vector<char> analysis;

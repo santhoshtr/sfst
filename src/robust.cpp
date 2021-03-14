@@ -12,6 +12,7 @@
 
 #include "compact.h"
 
+#include <algorithm>
 using std::equal_range;
 using std::pair;
 using std::set;

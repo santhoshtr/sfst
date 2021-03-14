@@ -31,6 +31,12 @@ using std::ostream;
 using std::set;
 using std::vector;
 
+#include <unordered_map>
+using std::unordered_map;
+
+#include <unordered_set>
+using std::unordered_set;
+
 #include "mem.h"
 
 namespace SFST {
@@ -55,7 +61,7 @@ class Transition;
 struct hashf {
   size_t operator()(const Node *n) const { return (size_t)n; }
 };
-typedef hash_set<const Node *, hashf> NodeHashSet;
+typedef unordered_set<const Node *, hashf> NodeHashSet;
 
 /*****************  class Arc  *************************************/
 
@@ -198,7 +204,7 @@ private:
       return (p1.first == p2.first && p1.second == p2.second);
     }
   };
-  typedef hash_map<NodePair, Node *, hashf, equalf> PairMap;
+  typedef unordered_map<NodePair, Node *, hashf, equalf> PairMap;
   PairMap pm;
 
 public:
@@ -222,7 +228,7 @@ private:
   size_t transition_count;
 
   typedef set<Label, Label::label_cmp> LabelSet;
-  typedef hash_map<Character, char *> SymbolMap;
+  typedef unordered_map<Character, std::string> SymbolMap;
 
   void incr_vmark(void) {
     if (++vmark == 0) {
@@ -241,7 +247,7 @@ private:
   bool compare_nodes(Node *node, Node *node2, Transducer &a2);
   void map_nodes(Node *node, Node *node2, Transducer *a, Level level);
   void freely_insert_at_node(Node *node, Label l);
-  int print_strings_node(Node *node, char *buffer, int pos, FILE *file, bool);
+  int print_strings_node(Node *node, FILE *file, bool);
   bool infinitely_ambiguous_node(Node *);
   bool is_cyclic_node(Node *, NodeHashSet &visited);
   bool is_automaton_node(Node *);
@@ -307,8 +313,11 @@ public:
   std::pair<size_t, size_t> nodeindexing(vector<Node *> *nodearray = NULL);
 
   int print_strings(FILE *, bool with_brackets = true); // enumerate all strings
+  vector<std::string> find_paths(Node *node, bool with_brackets);
 
+  vector<std::string> analyze_string(char *s, bool with_brackets = true);
   bool analyze_string(char *s, FILE *file, bool with_brackets = true);
+  vector<std::string> generate_string(char *s, bool with_brackets = true);
   bool generate_string(char *s, FILE *file, bool with_brackets = true);
   void generate(FILE *file, int max = -1, OutputType ot = Joint);
 

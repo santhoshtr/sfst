@@ -120,7 +120,7 @@ int main(int argc, char **argv)
         buffer[l] = '\0';
       char *s = buffer;
       while (*s)
-        fputs(a.longest_match(s), outfile);
+        fputs(a.longest_match(s).c_str(), outfile);
       fputc('\n', outfile);
     }
   } catch (const char *p) {

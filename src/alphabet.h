@@ -17,6 +17,7 @@
 #include "basic.h"
 
 #include <set>
+using std::hash;
 using std::set;
 
 #include <vector>
@@ -27,7 +28,9 @@ using std::ostream;
 
 #include <cstring>
 
-#include "sgi.h"
+//#include "sgi.h"
+#include <unordered_map>
+using std::unordered_map;
 
 #define SFSTVersion "1.4.7d"
 
@@ -159,8 +162,8 @@ class Alphabet {
 
   // string comparison operators needed to stored strings in a hash table
   struct eqstr {
-    bool operator()(const char *s1, const char *s2) const {
-      return strcmp(s1, s2) == 0;
+    bool operator()(std::string s1, std::string s2) const {
+      return s1.compare(s2) == 0;
     }
   };
 
@@ -168,12 +171,11 @@ class Alphabet {
   typedef set<Label, Label::label_cmp> LabelSet;
 
   // hash table used to map the symbols to their codes
-  typedef hash_map<const char *, Character, hash<const char *>, eqstr>
-      SymbolMap;
+  typedef unordered_map<std::string, Character> SymbolMap;
 
 public: // HFST addition
   // hash table used to map the codes back to the symbols
-  typedef hash_map<Character, char *> CharMap;
+  typedef unordered_map<Character, std::string> CharMap;
 
   // HFST addition
   bool operator==(const Alphabet &alpha) const;
@@ -184,7 +186,7 @@ private:
   LabelSet ls;  // set of labels known to the alphabet
 
   // add a new symbol with symbol code c
-  void add(const char *symbol, Character c);
+  void add(std::string symbol, Character c);
 
 public:
   bool utf8;
@@ -224,10 +226,10 @@ public:
   void compose(const Alphabet &la, const Alphabet &ua);
 
   // add a symbol to the alphabet and return its code
-  Character add_symbol(const char *symbol);
+  Character add_symbol(std::string symbol);
 
   // add a symbol to the alphabet with a given code
-  void add_symbol(const char *symbol, Character c);
+  void add_symbol(std::string symbol, Character c);
 
   // create a new marker symbol and return its code
   Character new_marker(void);
@@ -237,7 +239,7 @@ public:
   void complement(vector<Character> &sym);
 
   // return the code of the argument symbol
-  int symbol2code(const char *s) const {
+  int symbol2code(std::string s) const {
     SymbolMap::const_iterator p = sm.find(s);
     if (p != sm.end())
       return p->second;
@@ -245,31 +247,23 @@ public:
   };
 
   // return the symbol for the given symbol code
-  const char *code2symbol(Character c) const {
+  std::string code2symbol(Character c) const {
     CharMap::const_iterator p = cm.find(c);
     if (p == cm.end())
-      return NULL;
+      return "NULL";
     else
       return p->second;
   };
-
-  // write the symbol for the given symbol code into a string
-  void write_char(Character c, char *buffer, int *pos,
-                  bool with_brackets = true) const;
-
-  // write the symbol pair of a given label into a string
-  void write_label(Label l, char *buffer, int *pos,
-                   bool with_brackets = true) const;
 
   // write the symbol for the given symbol code into a buffer and return
   // a pointer to it
   // the flag "with_brackets" indicates whether the angle brackets
   // surrounding multi-character symbols are to be printed or not
-  const char *write_char(Character c, bool with_brackets = true) const;
+  std::string write_char(Character c, bool with_brackets = true) const;
 
   // write the symbol pair of a given label into a string
   // and return a pointer to it
-  const char *write_label(Label l, bool with_brackets = true) const;
+  std::string write_label(Label l, bool with_brackets = true) const;
 
   // scan the next multi-character symbol in the argument string
   int next_mcsym(char *&, bool insert = true);
@@ -278,8 +272,8 @@ public:
   int next_code(char *&, bool extended = true, bool insert = true);
 
   // convert a character string into a symbol or label sequence
-  void string2symseq(char *, vector<Character> &);
-  void string2labelseq(char *, vector<Label> &);
+  void string2symseq(std::string, vector<Character> &);
+  void string2labelseq(std::string, vector<Label> &);
 
   // scan the next label in the argument string
   Label next_label(char *&, bool extended = true);
@@ -293,7 +287,7 @@ public:
   // disambiguation and printing of analyses
   int compute_score(Analysis &ana);
   void disambiguate(vector<Analysis> &analyses);
-  char *print_analysis(Analysis &ana, bool both_layers);
+  std::string print_analysis(Analysis &ana, bool both_layers);
 
   friend ostream &operator<<(ostream &, const Alphabet &);
 };

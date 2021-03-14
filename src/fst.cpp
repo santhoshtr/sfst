@@ -364,16 +364,16 @@ void Transducer::store_symbols(Node *node, SymbolMap &symbol,
 
       Character c = l.upper_char();
       if (symbol.find(c) == symbol.end()) {
-        const char *s = alphabet.code2symbol(c);
-        if (s)
-          symbol[c] = fst_strdup(s);
+        std::string s = alphabet.code2symbol(c);
+        if (s != "NULL")
+          symbol[c] = s;
       }
 
       c = l.lower_char();
       if (symbol.find(c) == symbol.end()) {
-        const char *s = alphabet.code2symbol(c);
-        if (s)
-          symbol[c] = fst_strdup(s);
+        std::string s = alphabet.code2symbol(c);
+        if (s != "NULL")
+          symbol[c] = s;
       }
 
       store_symbols(arc->target_node(), symbol, labels);
@@ -397,7 +397,7 @@ void Transducer::minimise_alphabet()
   alphabet.clear();
   for (SymbolMap::iterator it = symbols.begin(); it != symbols.end(); it++) {
     alphabet.add_symbol(it->second, it->first);
-    free(it->second);
+    // free(it->second);
   }
   for (LabelSet::iterator it = labels.begin(); it != labels.end(); it++)
     alphabet.insert(*it);
@@ -480,41 +480,49 @@ bool Transducer::enumerate_paths(vector<Transducer *> &result)
   return false;
 }
 
+vector<std::string> Transducer::find_paths(Node *node, bool with_brackets) {
+  int result = 0;
+  vector<std::string> paths;
+  if (node->was_visited(vmark)) {
+    if (node->forward() != NULL) { // cycle detected
+      cerr << "Warning: cyclic analyses (cycle aborted)\n";
+      return paths;
+    }
+    node->set_forward(node); // used like a flag for loop detection
+  }
+
+  if (node->is_final()) {
+    result = 1;
+  }
+  for (ArcsIter i(node->arcs()); i; i++) {
+    Arc *arc = i;
+    Label l = arc->label();
+    std::string label = alphabet.write_label(l, with_brackets);
+    vector<std::string> child_paths =
+        find_paths(arc->target_node(), with_brackets);
+    for (int i = 0; i < child_paths.size(); i++) {
+      paths.push_back(label + child_paths[i]);
+    }
+    if (child_paths.size() == 0) {
+      paths.push_back(label);
+    }
+  }
+  node->set_forward(NULL);
+
+  return paths;
+}
+
 /*******************************************************************/
 /*                                                                 */
 /*  Transducer::print_strings_node                                 */
 /*                                                                 */
 /*******************************************************************/
 
-int Transducer::print_strings_node(Node *node, char *buffer, int pos,
-                                   FILE *file, bool with_brackets) {
-  int result = 0;
-
-  if (node->was_visited(vmark)) {
-    if (node->forward() != NULL) { // cycle detected
-      cerr << "Warning: cyclic analyses (cycle aborted)\n";
-      return 0;
-    }
-    node->set_forward(node); // used like a flag for loop detection
-  }
-  if (pos == BUFFER_SIZE)
-    throw "Output string in function print_strings_node is too long";
-  if (node->is_final()) {
-    buffer[pos] = '\0';
-    fprintf(file, "%s\n", buffer);
-    result = 1;
-  }
-  for (ArcsIter i(node->arcs()); i; i++) {
-    int p = pos;
-    Arc *arc = i;
-    Label l = arc->label();
-    alphabet.write_label(l, buffer, &p, with_brackets);
-    result |=
-        print_strings_node(arc->target_node(), buffer, p, file, with_brackets);
-  }
-  node->set_forward(NULL);
-
-  return result;
+int Transducer::print_strings_node(Node *node, FILE *file, bool with_brackets) {
+  std::string result = "";
+  find_paths(node, with_brackets);
+  fprintf(file, "%s\n", result.c_str());
+  return result.empty() == true ? 0 : 1;
 }
 
 /*******************************************************************/
@@ -526,9 +534,8 @@ int Transducer::print_strings_node(Node *node, char *buffer, int pos,
 int Transducer::print_strings(FILE *file, bool with_brackets)
 
 {
-  char buffer[BUFFER_SIZE];
   incr_vmark();
-  return print_strings_node(root_node(), buffer, 0, file, with_brackets);
+  return print_strings_node(root_node(), file, with_brackets);
 }
 
 /*******************************************************************/
@@ -537,9 +544,8 @@ int Transducer::print_strings(FILE *file, bool with_brackets)
 /*                                                                 */
 /*******************************************************************/
 
-bool Transducer::analyze_string(char *string, FILE *file, bool with_brackets)
-
-{
+vector<std::string> Transducer::analyze_string(char *string,
+                                               bool with_brackets) {
   vector<Character> input;
   alphabet.string2symseq(string, input);
   vector<Label> labels;
@@ -554,9 +560,19 @@ bool Transducer::analyze_string(char *string, FILE *file, bool with_brackets)
   delete a3;
 
   a2->alphabet.copy(alphabet);
-  bool result = a2->print_strings(file, with_brackets);
-  delete a2;
-  return result;
+  a2->incr_vmark();
+  vector<std::string> analysis = a2->find_paths(a2->root_node(), with_brackets);
+  return analysis;
+}
+
+bool Transducer::analyze_string(char *string, FILE *file, bool with_brackets)
+
+{
+  vector<std::string> analysis = analyze_string(string, with_brackets);
+  for (int i = 0; i < analysis.size(); i++) {
+    fprintf(file, "%s\n", analysis[i].c_str());
+  }
+  return analysis.size() != 0;
 }
 
 /*******************************************************************/
@@ -565,7 +581,8 @@ bool Transducer::analyze_string(char *string, FILE *file, bool with_brackets)
 /*                                                                 */
 /*******************************************************************/
 
-bool Transducer::generate_string(char *string, FILE *file, bool with_brackets)
+vector<std::string> Transducer::generate_string(char *string,
+                                                bool with_brackets)
 
 {
   Transducer a1(string, &alphabet, false);
@@ -576,9 +593,19 @@ bool Transducer::generate_string(char *string, FILE *file, bool with_brackets)
   delete a3;
 
   a2->alphabet.copy(alphabet);
-  bool result = a2->print_strings(file, with_brackets);
-  delete a2;
-  return result;
+  vector<std::string> gen_result =
+      a2->find_paths(a2->root_node(), with_brackets);
+  return gen_result;
+}
+
+bool Transducer::generate_string(char *string, FILE *file, bool with_brackets)
+
+{
+  vector<std::string> generated = generate_string(string, with_brackets);
+  for (int i = 0; i < generated.size(); i++) {
+    fprintf(file, "%s\n", generated[i].c_str());
+  }
+  return generated.size() != 0;
 }
 
 /*******************************************************************/
@@ -638,6 +665,35 @@ static void print_node(ostream &s, Node *node, VType vmark, Alphabet &abc)
       print_node(s, arc->target_node(), vmark, abc);
     }
   }
+}
+
+/*******************************************************************/
+/*                                                                 */
+/*  print_node                                                     */
+/*                                                                 */
+/*******************************************************************/
+
+static std::string print_node(Node *node, VType vmark, Alphabet &abc)
+
+{
+  std::string result = "";
+  if (!node->was_visited(vmark)) {
+    Arcs *arcs = node->arcs();
+    for (ArcsIter p(arcs); p; p++) {
+      Arc *arc = p;
+      result += node->index + "\t" + arc->target_node()->index;
+      result += "\t" + abc.write_char(arc->label().lower_char());
+      result += "\t" + abc.write_char(arc->label().upper_char());
+      result += "\n";
+    }
+    if (node->is_final())
+      result += node->index + "\n";
+    for (ArcsIter p(arcs); p; p++) {
+      Arc *arc = p;
+      result += print_node(arc->target_node(), vmark, abc);
+    }
+  }
+  return result;
 }
 
 /*******************************************************************/

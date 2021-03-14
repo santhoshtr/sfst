@@ -329,7 +329,8 @@ int main(int argc, char **argv)
             for (size_t k = 0; k < analyses.size(); k++) {
               if (Delimiter)
                 fputs(Delimiter, outfile);
-              fputs(transducer[i]->print_analysis(analyses[k]), outfile);
+              fputs(transducer[i]->print_analysis(analyses[k]).c_str(),
+                    outfile);
               if (PrintProbs)
                 fprintf(outfile, "\t%f", prob[k]);
               if (!Delimiter)
@@ -343,7 +344,8 @@ int main(int argc, char **argv)
             for (size_t k = 0; k < analyses.size(); k++) {
               if (Delimiter)
                 fputs(Delimiter, outfile);
-              fputs(transducer[i]->print_analysis(analyses[k]), outfile);
+              fputs(transducer[i]->print_analysis(analyses[k]).c_str(),
+                    outfile);
               if (!Delimiter)
                 fputc('\n', outfile);
             }
