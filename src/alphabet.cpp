@@ -178,7 +178,6 @@ Character Alphabet::add_symbol(std::string symbol)
   for (Character i = 1; i != 0; i++)
     if (cm.find(i) == cm.end()) {
       add(symbol, i);
-      std::cout << "Adding symbol " << symbol << ":" << i << "\n";
       return i;
     }
 
@@ -243,16 +242,9 @@ std::string Alphabet::write_char(Character c, bool with_brackets) const {
   std::string buffer = "";
   if (s == ":" || s == "\\") {
     buffer += '\\';
-    buffer += s[0];
-  } else if (s == "NULL") {
-    int i = 0;
-    int l = (int)s.length() - 1;
-    if (!with_brackets && s[i] == '<' && s[l] == '>') {
-      i++;
-      l--;
-    }
-    while (i <= l)
-      buffer += s[i++];
+    buffer += s;
+  } else if (s != "NULL") {
+    buffer += s;
   } else {
     unsigned int uc = c;
     if (uc >= 32 && uc < 256)
@@ -261,7 +253,7 @@ std::string Alphabet::write_char(Character c, bool with_brackets) const {
       buffer += uc;
     }
   }
-  return s;
+  return buffer;
 }
 
 /*******************************************************************/

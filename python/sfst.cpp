@@ -1,4 +1,6 @@
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+
 #include <sstream>
 
 #include "../src/fst.h"
@@ -12,29 +14,6 @@ const int GENERATE_MODE = 1;
 const int ANALYSE_MODE = 2;
 
 Transducer *transducer;
-
-/*
- * Use the transducer (either in generate- or in analyse-mode) to rewrite the
- * input string (GENERATE_MODE, ANALYSE_MODE). This function is not directly
- * callable from Python.
- * Because of peculiarities in the implementation of SFST it is not possible
- * to access the output of the analyse_string/generate_string directly. As a
- * workaround the result is written into a file and afterwards read out.
- */
-const char *transduce(char input[], int mode)
-{
-    // Analyse or generate transducer output and write to file
-    std::string result;
-    if (mode == ANALYSE_MODE)
-    {
-        result= transducer->analyze_string(input, true);
-    }
-    else if (mode == GENERATE_MODE)
-    {
-        result = transducer->generate_string(input, true);
-    }
-    return result.c_str();
-}
 
 /**
  * Initialize transducer.
@@ -69,14 +48,14 @@ void delete_transducer()
     delete transducer;
 }
 
-const char *analyse(char *analysis_input)
+const vector<std::string> analyse(char *input)
 {
-    return transduce(analysis_input, ANALYSE_MODE);
+    return transducer->analyze_string(input, true);
 }
 
-const char *generate(char *generate_input)
+const vector<std::string> generate(char *input)
 {
-    return transduce(generate_input, GENERATE_MODE);
+    return  transducer->generate_string(input, true);
 }
 
 namespace py = pybind11;

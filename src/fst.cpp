@@ -480,29 +480,36 @@ bool Transducer::enumerate_paths(vector<Transducer *> &result)
   return false;
 }
 
-std::string Transducer::to_string(Node *node, bool with_brackets) {
-  std::string result = "";
-
+vector<std::string> Transducer::find_paths(Node *node, bool with_brackets) {
+  int result = 0;
+  vector<std::string> paths;
   if (node->was_visited(vmark)) {
     if (node->forward() != NULL) { // cycle detected
       cerr << "Warning: cyclic analyses (cycle aborted)\n";
-      return 0;
+      return paths;
     }
     node->set_forward(node); // used like a flag for loop detection
   }
+
   if (node->is_final()) {
-    return result;
+    result = 1;
   }
   for (ArcsIter i(node->arcs()); i; i++) {
     Arc *arc = i;
     Label l = arc->label();
-    result += alphabet.write_label(l, with_brackets);
-    ;
-    result += to_string(arc->target_node(), with_brackets);
+    std::string label = alphabet.write_label(l, with_brackets);
+    vector<std::string> child_paths =
+        find_paths(arc->target_node(), with_brackets);
+    for (int i = 0; i < child_paths.size(); i++) {
+      paths.push_back(label + child_paths[i]);
+    }
+    if (child_paths.size() == 0) {
+      paths.push_back(label);
+    }
   }
   node->set_forward(NULL);
 
-  return result;
+  return paths;
 }
 
 /*******************************************************************/
@@ -512,7 +519,8 @@ std::string Transducer::to_string(Node *node, bool with_brackets) {
 /*******************************************************************/
 
 int Transducer::print_strings_node(Node *node, FILE *file, bool with_brackets) {
-  std::string result = to_string(node, with_brackets);
+  std::string result = "";
+  find_paths(node, with_brackets);
   fprintf(file, "%s\n", result.c_str());
   return result.empty() == true ? 0 : 1;
 }
@@ -536,7 +544,8 @@ int Transducer::print_strings(FILE *file, bool with_brackets)
 /*                                                                 */
 /*******************************************************************/
 
-std::string Transducer::analyze_string(char *string, bool with_brackets) {
+vector<std::string> Transducer::analyze_string(char *string,
+                                               bool with_brackets) {
   vector<Character> input;
   alphabet.string2symseq(string, input);
   vector<Label> labels;
@@ -551,16 +560,19 @@ std::string Transducer::analyze_string(char *string, bool with_brackets) {
   delete a3;
 
   a2->alphabet.copy(alphabet);
-  return a2->to_string(a2->root_node(), with_brackets);
+  a2->incr_vmark();
+  vector<std::string> analysis = a2->find_paths(a2->root_node(), with_brackets);
+  return analysis;
 }
 
 bool Transducer::analyze_string(char *string, FILE *file, bool with_brackets)
 
 {
-  std::string analysis = analyze_string(string, with_brackets);
-  fprintf(file, "%s\n", analysis.c_str());
-  bool result = analysis.empty();
-  return !result;
+  vector<std::string> analysis = analyze_string(string, with_brackets);
+  for (int i = 0; i < analysis.size(); i++) {
+    fprintf(file, "%s\n", analysis[i].c_str());
+  }
+  return analysis.size() != 0;
 }
 
 /*******************************************************************/
@@ -569,7 +581,8 @@ bool Transducer::analyze_string(char *string, FILE *file, bool with_brackets)
 /*                                                                 */
 /*******************************************************************/
 
-std::string Transducer::generate_string(char *string, bool with_brackets)
+vector<std::string> Transducer::generate_string(char *string,
+                                                bool with_brackets)
 
 {
   Transducer a1(string, &alphabet, false);
@@ -580,15 +593,19 @@ std::string Transducer::generate_string(char *string, bool with_brackets)
   delete a3;
 
   a2->alphabet.copy(alphabet);
-  return a2->to_string(a2->root_node(), with_brackets);
+  vector<std::string> gen_result =
+      a2->find_paths(a2->root_node(), with_brackets);
+  return gen_result;
 }
 
 bool Transducer::generate_string(char *string, FILE *file, bool with_brackets)
 
 {
-  std::string generated = generate_string(string, with_brackets);
-  fprintf(file, "%s\n", generated.c_str());
-  return !generated.empty();
+  vector<std::string> generated = generate_string(string, with_brackets);
+  for (int i = 0; i < generated.size(); i++) {
+    fprintf(file, "%s\n", generated[i].c_str());
+  }
+  return generated.size() != 0;
 }
 
 /*******************************************************************/
