@@ -267,6 +267,7 @@ private:
   void index_nodes(Node *, vector<Node *> *);
 
 public:
+  static bool hopcroft_minimisation;
   bool deterministic;
   bool minimised;
   bool indexed;
@@ -343,7 +344,15 @@ public:
   };
   Transducer &
   determinise(bool copy_alphabet = true); // creates a deterministic transducer
-  Transducer &minimise(bool verbose = true);
+  Transducer &rev_det_minimise(bool verbose);
+  Transducer &hopcroft_minimise(bool verbose);
+  Transducer &minimise(bool verbose = true) {
+    if (hopcroft_minimisation){
+      return hopcroft_minimise(verbose);
+    } else {
+    return rev_det_minimise(verbose);
+    }
+  }
   void store(FILE *); // stores the transducer in binary format
   void store_lowmem(FILE *);
   void read(FILE *); // reads an transducer in binary format

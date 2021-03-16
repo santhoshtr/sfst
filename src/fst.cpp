@@ -18,6 +18,8 @@ using std::istream;
 using std::ostream;
 using std::vector;
 
+bool Transducer::hopcroft_minimisation = true;
+
 const int BUFFER_SIZE = 100000;
 
 /*******************************************************************/
@@ -421,6 +423,36 @@ size_t Transducer::size_node(Node *node)
     }
   }
   return result;
+}
+
+/*******************************************************************/
+/*                                                                 */
+/*  Transducer::rev_det_minimise                                   */
+/*                                                                 */
+/*******************************************************************/
+
+Transducer &Transducer::rev_det_minimise(bool verbose)
+
+{
+  if (minimised)
+    return copy();
+
+  Transducer *a1, *a2;
+
+  a1 = &reverse();
+  a2 = &a1->determinise();
+  delete a1;
+
+  a1 = &a2->reverse();
+  delete a2;
+
+  a2 = &a1->determinise();
+  delete a1;
+
+  a2->minimised = true;
+  a2->minimise_alphabet();
+
+  return *a2;
 }
 
 /*******************************************************************/

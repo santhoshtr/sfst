@@ -1,6 +1,7 @@
 
 /*******************************************************************/
 /*                                                                 */
+/*  FILE     hopcroft.C                                            */
 /*  MODULE   hopcroft                                              */
 /*  PROGRAM  SFST                                                  */
 /*  AUTHOR   Helmut Schmid, IMS, University of Stuttgart           */
@@ -11,39 +12,6 @@
 
 // HFST
 namespace SFST {
-
-/*******************************************************************/
-/*                                                                 */
-/*  Transducer::rev_det_minimise                                   */
-/*                                                                 */
-/*******************************************************************/
-
-#if 0
-  // alternative less efficient minimisation algorithm
-  Transducer &Transducer::rev_det_minimise( bool verbose )
-
-  {
-    if (minimised)
-      return copy();
-
-    Transducer *a1, *a2;
-
-    a1 = &reverse();
-    a2 = &a1->determinise();
-    delete a1;
-
-    a1 = &a2->reverse();
-    delete a2;
-
-    a2 = &a1->determinise();
-    delete a1;
-
-    a2->minimised = true;
-    a2->minimise_alphabet();
-
-    return *a2;
-  }
-#endif
 
 /*****************  class Minimiser  *****************************/
 
@@ -212,39 +180,39 @@ private:
 
   Transducer &build_transducer();
 
-#if 0
-    void print_groups() {
-      fputs("--------------\n", stderr);
-      for( size_t g=first_group(); g<group.size(); g++ ) {
-     	fprintf(stderr,"group %lu: ", (unsigned long)g-first_group());
-	if (group[g].first_state != undef) {
-	  Index s = group[g].first_state;
-	  do {
-	    fprintf(stderr,"%lu ", (unsigned long)s);
-	    s = state[s].next_in_group;
-	  } while (s != group[g].first_state);
-	}
-	if (group[g].first_new_state != undef) {
-	  fputs("| ", stderr);
-	  Index s = group[g].first_new_state;
-	  do {
-	    fprintf(stderr,"%lu ", (unsigned long)s);
-	    s = state[s].next_in_group;
-	  } while (s != group[g].first_new_state);
-	}
-	fputc('\n', stderr);
+#ifndef NDEBUG
+  void print_groups() {
+    fputs("--------------\n", stderr);
+    for (size_t g = first_group(); g < group.size(); g++) {
+      fprintf(stderr, "group %lu: ", (unsigned long)g - first_group());
+      if (group[g].first_state != undef) {
+        Index s = group[g].first_state;
+        do {
+          fprintf(stderr, "%lu ", (unsigned long)s);
+          s = state[s].next_in_group;
+        } while (s != group[g].first_state);
       }
+      if (group[g].first_new_state != undef) {
+        fputs("| ", stderr);
+        Index s = group[g].first_new_state;
+        do {
+          fprintf(stderr, "%lu ", (unsigned long)s);
+          s = state[s].next_in_group;
+        } while (s != group[g].first_new_state);
+      }
+      fputc('\n', stderr);
     }
+  }
 #endif
 };
 
 /*******************************************************************/
 /*                                                                 */
-/*  Transducer::minimise                                           */
+/*  Transducer::hopcroft_minimise                                  */
 /*                                                                 */
 /*******************************************************************/
 
-Transducer &Transducer::minimise(bool verbose)
+Transducer &Transducer::hopcroft_minimise(bool verbose)
 
 {
   if (minimised)
