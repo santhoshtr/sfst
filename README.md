@@ -21,7 +21,7 @@ SFST can be compiled in Unix/Linux, Windows and Mac operating systems.
 
 The SFST command line utilities has a few external requirements.
 
- 1. The "Flex" scanner generator which can be downloaded from: http://flex.sourceforge.net. In linux systems they can be installed using package manager. For example, in Ubuntu, `apt install flex` installs it.
+ 1. The "Flex" scanner generator which can be downloaded from: https://github.com/westes/flex. In linux systems they can be installed using package manager. For example, in Ubuntu, `apt install flex` installs it.
  2. The "Bison" parser generator available from http://www.gnu.org/software/bison. In linux systems they can be installed using package manager. For example, in Ubuntu, `apt install bison` installs it.
 
 After unpacking the software package, in the top directory of source code,
