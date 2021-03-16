@@ -161,8 +161,15 @@ int main(int argc, char **argv)
         cerr << *t;
       }
       t->alphabet.copy(a[0]->alphabet);
-      if (!t->print_strings(outfile))
+      vector<std::string> paths = t->find_paths(t->root_node(), true);
+      if (paths.size()==0){
         fprintf(outfile, "no analysis for \"%s\"\n", buffer);
+      } else{
+          for (int i = 0; i < paths.size(); i++) {
+            fprintf(outfile, "%s\n", paths[i].c_str());
+          }
+      }
+      paths.clear();
       delete t;
     }
   } catch (const char *p) {

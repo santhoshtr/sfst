@@ -247,7 +247,6 @@ private:
   bool compare_nodes(Node *node, Node *node2, Transducer &a2);
   void map_nodes(Node *node, Node *node2, Transducer *a, Level level);
   void freely_insert_at_node(Node *node, Label l);
-  int print_strings_node(Node *node, FILE *file, bool);
   bool infinitely_ambiguous_node(Node *);
   bool is_cyclic_node(Node *, NodeHashSet &visited);
   bool is_automaton_node(Node *);
@@ -312,7 +311,6 @@ public:
   void minimise_alphabet(void);
   std::pair<size_t, size_t> nodeindexing(vector<Node *> *nodearray = NULL);
 
-  int print_strings(FILE *, bool with_brackets = true); // enumerate all strings
   vector<std::string> find_paths(Node *node, bool with_brackets);
 
   vector<std::string> analyze_string(char *s, bool with_brackets = true);

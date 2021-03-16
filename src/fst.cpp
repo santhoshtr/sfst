@@ -507,36 +507,12 @@ vector<std::string> Transducer::find_paths(Node *node, bool with_brackets) {
     for (int i = 0; i < child_paths.size(); i++) {
       paths.push_back(label + child_paths[i]);
     }
+
+    child_paths.clear();
   }
   node->set_forward(NULL);
 
   return paths;
-}
-
-/*******************************************************************/
-/*                                                                 */
-/*  Transducer::print_strings_node                                 */
-/*                                                                 */
-/*******************************************************************/
-
-int Transducer::print_strings_node(Node *node, FILE *file, bool with_brackets) {
-  std::string result = "";
-  find_paths(node, with_brackets);
-  fprintf(file, "%s\n", result.c_str());
-  return result.empty() == true ? 0 : 1;
-}
-
-/*******************************************************************/
-/*                                                                 */
-/*  Transducer::print_strings                                      */
-/*                                                                 */
-/*******************************************************************/
-
-int Transducer::print_strings(FILE *file, bool with_brackets)
-
-{
-  incr_vmark();
-  return print_strings_node(root_node(), file, with_brackets);
 }
 
 /*******************************************************************/
@@ -563,6 +539,7 @@ vector<std::string> Transducer::analyze_string(char *string,
   a2->alphabet.copy(alphabet);
   a2->incr_vmark();
   vector<std::string> analysis = a2->find_paths(a2->root_node(), with_brackets);
+  delete a2;
   return analysis;
 }
 
@@ -596,6 +573,7 @@ vector<std::string> Transducer::generate_string(char *string,
   a2->alphabet.copy(alphabet);
   vector<std::string> gen_result =
       a2->find_paths(a2->root_node(), with_brackets);
+  delete a2;
   return gen_result;
 }
 

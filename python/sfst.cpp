@@ -55,7 +55,7 @@ const vector<std::string> analyse(char *input)
 
 const vector<std::string> generate(char *input)
 {
-    return  transducer->generate_string(input, true);
+    return transducer->generate_string(input, true);
 }
 
 namespace py = pybind11;
