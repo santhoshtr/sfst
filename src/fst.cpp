@@ -481,7 +481,6 @@ bool Transducer::enumerate_paths(vector<Transducer *> &result)
 }
 
 vector<std::string> Transducer::find_paths(Node *node, bool with_brackets) {
-  int result = 0;
   vector<std::string> paths;
   if (node->was_visited(vmark)) {
     if (node->forward() != NULL) { // cycle detected
@@ -491,9 +490,7 @@ vector<std::string> Transducer::find_paths(Node *node, bool with_brackets) {
     node->set_forward(node); // used like a flag for loop detection
   }
 
-  if (node->is_final()) {
-    result = 1;
-  }
+  paths.reserve(node->arcs()->size() * 10);
   for (ArcsIter i(node->arcs()); i; i++) {
     Arc *arc = i;
     Label l = arc->label();
@@ -509,8 +506,10 @@ vector<std::string> Transducer::find_paths(Node *node, bool with_brackets) {
     }
 
     child_paths.clear();
+    child_paths.shrink_to_fit();
   }
   node->set_forward(NULL);
+  paths.shrink_to_fit();
 
   return paths;
 }
