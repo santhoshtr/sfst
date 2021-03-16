@@ -500,11 +500,12 @@ vector<std::string> Transducer::find_paths(Node *node, bool with_brackets) {
     std::string label = alphabet.write_label(l, with_brackets);
     vector<std::string> child_paths =
         find_paths(arc->target_node(), with_brackets);
+
+    if (arc->target_node()->is_final()) {
+      paths.push_back(label);
+    }
     for (int i = 0; i < child_paths.size(); i++) {
       paths.push_back(label + child_paths[i]);
-    }
-    if (child_paths.size() == 0) {
-      paths.push_back(label);
     }
   }
   node->set_forward(NULL);
