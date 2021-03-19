@@ -98,9 +98,8 @@ class CMakeBuild(build_ext):
             ["cmake", "--build", "."] + build_args, cwd=self.build_temp
         )
 
-version_file = open('VERSION')
-version = version_file.read().strip()
-
+version = open('VERSION').read().strip()
+long_description = open('python/README.md').read()
 # The information here can also be placed in setup.cfg - better separation of
 # logic and declaration, and simpler if you include description/version in a file.
 setup(
@@ -109,7 +108,10 @@ setup(
     author="Santhosh Thottingal",
     author_email="santhosh.thottingal@gmail.com",
     description="Python binding for SFST",
-    long_description="Python binding for Stuttgart Finite State Transducer",
+    long_description=long_description,
+    long_description_content_type="text/markdown",
+    url="https://github.com/santhoshtr/sfst",
+    license="GPLv2",
     ext_modules=[CMakeExtension("sfst")],
     cmdclass={"build_ext": CMakeBuild},
     zip_safe=False,
