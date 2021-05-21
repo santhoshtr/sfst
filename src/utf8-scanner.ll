@@ -23,7 +23,7 @@
 using namespace SFST;
 
 #define MAX_INCLUDE_DEPTH 10
-  
+
 int Include_Stack_Ptr = 0;
 YY_BUFFER_STATE Include_Stack[MAX_INCLUDE_DEPTH];
 char *Name_Stack[MAX_INCLUDE_DEPTH];
@@ -34,9 +34,9 @@ char *FileName=NULL;
 
 bool UTF8=true;
 
-static void unmatched( char sym ) {
-  fprintf(stderr,"Warning: unmatched symbol \"%c\". You might want to quote it.\n", sym);
-}
+// static void unmatched( char sym ) {
+//   fprintf(stderr,"Warning: unmatched symbol \"%c\". You might want to quote it.\n", sym);
+//}
 
 static char *unquote(char *string, bool del_quote=true) {
   char *s=string, *result=string;
@@ -155,13 +155,13 @@ FN	[A-Za-z0-9._/\-*+]
 
 \<({C5}|\\.)*\>   { yylval.name = unquote(yytext,false); return SYMBOL; }
 
-\"<{FN}+>\" { 
+\"<{FN}+>\" {
                     yylval.value = fst_strdup(yytext+2);
 		    yylval.value[strlen(yylval.value)-2] = 0;
                     return STRING2;
                   }
 
-\"{FN}+\" { 
+\"{FN}+\" {
                     yylval.value = fst_strdup(yytext+1);
 		    yylval.value[strlen(yylval.value)-1] = 0;
                     return STRING;
@@ -171,7 +171,7 @@ FN	[A-Za-z0-9._/\-*+]
 \\[ \t]*([ \t]\%.*)?\r?\n { print_lineno(); /* ignored */ }
 \r?\n             { print_lineno(); return NEWLINE; }
 
-\\[0-9]+          { long l=atol(yytext+1); 
+\\[0-9]+          { long l=atol(yytext+1);
 		    if (l <= 1114112) { yylval.value=fst_strdup(int2utf8((unsigned)l)); return UTF8CHAR; }
 		    yyerror("invalid expression");
                   }

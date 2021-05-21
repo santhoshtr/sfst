@@ -289,7 +289,7 @@ void CompactTransducer::read_probs(FILE *file)
 
 {
   size_t n, m;
-  fread(&n, sizeof(n), 1, file);
+  (void)!fread(&n, sizeof(n), 1, file);
   if (fread(&m, sizeof(n), 1, file) != 1 || n != node_count() ||
       m != arc_count()) {
     fprintf(stderr, "Error: incompatible probability file!\n");
@@ -297,7 +297,7 @@ void CompactTransducer::read_probs(FILE *file)
   }
   final_logprob = new float[n];
   arc_logprob = new float[m];
-  fread(final_logprob, sizeof(float), n, file);
+  (void)!fread(final_logprob, sizeof(float), n, file);
   if (fread(arc_logprob, sizeof(float), n, file) != n) {
     fprintf(stderr, "Error: in probability file!\n");
     exit(1);

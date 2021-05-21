@@ -863,18 +863,18 @@ void Transducer::store(FILE *file)
 
 static void read_node(FILE *file, Node *node, Node **p, Transducer *a) {
   char c;
-  fread(&c, sizeof(c), 1, file);
+  (void)!fread(&c, sizeof(c), 1, file);
   node->set_final(c);
 
   unsigned short n;
-  fread(&n, sizeof(n), 1, file);
+  (void)!fread(&n, sizeof(n), 1, file);
 
   for (int i = 0; i < n; i++) {
     Character lc, uc;
     unsigned int t;
-    fread(&lc, sizeof(lc), 1, file);
-    fread(&uc, sizeof(uc), 1, file);
-    fread(&t, sizeof(t), 1, file);
+    (void)!fread(&lc, sizeof(lc), 1, file);
+    (void)!fread(&uc, sizeof(uc), 1, file);
+    (void)!fread(&t, sizeof(t), 1, file);
     if (ferror(file))
       throw "Error encountered while reading transducer from file";
     if (p[t])
@@ -901,7 +901,7 @@ void Transducer::read_transducer_binary(FILE *file)
 
   vmark = deterministic = 0;
   unsigned int n;
-  fread(&n, sizeof(n), 1, file); // number of nodes
+  (void)!fread(&n, sizeof(n), 1, file); // number of nodes
   if (ferror(file))
     throw "Error encountered while reading transducer from file";
 

@@ -42,15 +42,15 @@ public:
 
   LMNode(long pos, FILE *lmafile) {
     fseek(lmafile, pos, SEEK_SET);
-    fread(&finalp, sizeof(finalp), 1, lmafile);
-    fread(&number_of_arcs, sizeof(number_of_arcs), 1, lmafile);
+    (void)!fread(&finalp, sizeof(finalp), 1, lmafile);
+    (void)!fread(&number_of_arcs, sizeof(number_of_arcs), 1, lmafile);
     arc = new LMArc[number_of_arcs];
     for (int i = 0; i < (int)number_of_arcs; i++) {
       Character lc, uc;
       unsigned int tpos;
-      fread(&lc, sizeof(lc), 1, lmafile);
-      fread(&uc, sizeof(uc), 1, lmafile);
-      fread(&tpos, sizeof(tpos), 1, lmafile);
+      (void)!fread(&lc, sizeof(lc), 1, lmafile);
+      (void)!fread(&uc, sizeof(uc), 1, lmafile);
+      (void)!fread(&tpos, sizeof(tpos), 1, lmafile);
       arc[i].label = Label(lc, uc);
       arc[i].tnodepos = tpos;
     }
