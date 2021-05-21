@@ -5,8 +5,6 @@ find_package(BISON)
 
 set(CMAKE_CXX_FLAGS "-O3 -Wall -std=c++11 -ansi")
 
-add_definitions(-DSGI__gnu_cxx)
-
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 include_directories(.)
 
