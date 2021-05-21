@@ -165,8 +165,8 @@ int main(int argc, char **argv)
       if (paths.size()==0){
         fprintf(outfile, "no analysis for \"%s\"\n", buffer);
       } else{
-          for (int i = 0; i < paths.size(); i++) {
-            fprintf(outfile, "%s\n", paths[i].c_str());
+          for (auto const &it: paths) {
+            fprintf(outfile, "%s\n", it.c_str());
           }
       }
       paths.clear();
