@@ -47,6 +47,11 @@ set_target_properties(libsfststatic PROPERTIES POSITION_INDEPENDENT_CODE ON)
 set_target_properties(libsfststatic PROPERTIES OUTPUT_NAME "sfst.static")
 
 if(BISON_FOUND AND FLEX_FOUND)
+    add_executable(fst-compiler compact.cpp make-compact.cpp interface.cpp
+    default-scanner.cpp fst-compiler.cpp)
+    target_link_libraries(fst-compiler libsfst)
+    target_link_libraries(fst-compiler readline)
+
     add_executable(fst-compiler-utf8 compact.cpp make-compact.cpp interface.cpp
     utf8-scanner.cpp fst-compiler.cpp)
     target_link_libraries(fst-compiler-utf8 libsfst)
@@ -93,7 +98,7 @@ if(BISON_FOUND AND FLEX_FOUND)
 
 
     # Install
-    install(TARGETS fst-compact fst-generate fst-infl2 fst-lattice fst-match  fst-parse fst-text2bin fst-compiler-utf8 fst-infl fst-infl3 fst-lowmem fst-mor fst-print fst-train
+    install(TARGETS fst-compact fst-generate fst-infl2 fst-lattice fst-match  fst-parse fst-text2bin fst-compiler fst-compiler-utf8 fst-infl fst-infl3 fst-lowmem fst-mor fst-print fst-train
         RUNTIME DESTINATION bin)
 endif()
 
