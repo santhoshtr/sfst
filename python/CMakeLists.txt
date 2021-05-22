@@ -4,7 +4,6 @@ endif()
 
 set(CMAKE_CXX_FLAGS "-O3 -Wall -std=c++11 -ansi")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
-add_definitions(-DSGI__gnu_cxx)
 
 include(CTest)
 include(pybind11.cmake)
