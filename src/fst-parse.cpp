@@ -162,12 +162,12 @@ int main(int argc, char **argv)
       }
       t->alphabet.copy(a[0]->alphabet);
       vector<std::string> paths = t->find_paths(t->root_node(), true);
-      if (paths.size()==0){
+      if (paths.size() == 0) {
         fprintf(outfile, "no analysis for \"%s\"\n", buffer);
-      } else{
-          for (auto const &it: paths) {
-            fprintf(outfile, "%s\n", it.c_str());
-          }
+      } else {
+        for (auto const &it : paths) {
+          fprintf(outfile, "%s\n", it.c_str());
+        }
       }
       paths.clear();
       delete t;

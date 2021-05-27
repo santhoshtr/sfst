@@ -347,10 +347,10 @@ public:
   Transducer &rev_det_minimise(bool verbose);
   Transducer &hopcroft_minimise(bool verbose);
   Transducer &minimise(bool verbose = true) {
-    if (hopcroft_minimisation){
+    if (hopcroft_minimisation) {
       return hopcroft_minimise(verbose);
     } else {
-    return rev_det_minimise(verbose);
+      return rev_det_minimise(verbose);
     }
   }
   void store(FILE *); // stores the transducer in binary format
