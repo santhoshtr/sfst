@@ -533,7 +533,7 @@ vector<std::string> Transducer::find_paths(Node *node, bool with_brackets) {
     if (arc->target_node()->is_final()) {
       paths.push_back(label);
     }
-    for (auto const &it: child_paths) {
+    for (auto const &it : child_paths) {
       paths.push_back(label + it);
     }
 
@@ -578,7 +578,7 @@ bool Transducer::analyze_string(char *string, FILE *file, bool with_brackets)
 
 {
   vector<std::string> analysis = analyze_string(string, with_brackets);
-  for (auto const &it: analysis) {
+  for (auto const &it : analysis) {
     fprintf(file, "%s\n", it.c_str());
   }
   return analysis.size() != 0;
@@ -612,7 +612,7 @@ bool Transducer::generate_string(char *string, FILE *file, bool with_brackets)
 
 {
   vector<std::string> generated = generate_string(string, with_brackets);
-  for (auto const &it: generated) {
+  for (auto const &it : generated) {
     fprintf(file, "%s\n", it.c_str());
   }
   return generated.size() != 0;
