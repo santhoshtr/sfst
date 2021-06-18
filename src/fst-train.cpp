@@ -10,8 +10,8 @@
 
 #include <math.h>
 
-#include "version.h"
 #include "compact.h"
+#include "version.h"
 
 using std::cerr;
 using std::vector;

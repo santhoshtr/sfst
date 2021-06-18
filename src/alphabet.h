@@ -32,7 +32,6 @@ using std::ostream;
 #include <unordered_map>
 using std::unordered_map;
 
-
 namespace SFST {
 
 #ifndef CODE_DATA_TYPE
