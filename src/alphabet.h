@@ -17,7 +17,6 @@
 #include "basic.h"
 
 #include <set>
-using std::hash;
 using std::set;
 
 #include <vector>
