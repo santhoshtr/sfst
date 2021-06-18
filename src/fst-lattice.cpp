@@ -8,6 +8,7 @@
 /*******************************************************************/
 
 #include "fst.h"
+#include "version.h"
 
 using std::cerr;
 using std::cout;
@@ -65,7 +66,7 @@ void get_flags(int *argc, char **argv)
       usage();
       argv[i] = NULL;
     } else if (strcmp(argv[i], "-v") == 0) {
-      printf("fst-lattice version %s\n", SFSTVersion);
+      printf("fst-lattice version %s\n", SFST_VERSION);
       exit(0);
     }
   }

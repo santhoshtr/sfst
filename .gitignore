@@ -2,4 +2,5 @@ build/
 .vscode
 *.o
 *.so
-
+Makefile
+src/version.h

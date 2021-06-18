@@ -8,6 +8,7 @@
 /*******************************************************************/
 
 #include "fst.h"
+#include "version.h"
 
 using std::cerr;
 
@@ -33,7 +34,7 @@ int main(int argc, char **argv)
       fprintf(stderr, "Options:\n\t-s create transducer for generation\n\n");
       exit(0);
     } else if (strcmp(argv[1], "-v") == 0) {
-      printf("fst-lowmem version %s\n", SFSTVersion);
+      printf("fst-lowmem version %s\n", SFST_VERSION);
       exit(0);
     }
   }

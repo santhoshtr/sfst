@@ -13,6 +13,7 @@
 #include "make-compact.h"
 #include "scanner.h"
 #include "interface.h"
+#include "version.h"
 
 using std::cerr;
 using namespace SFST;
@@ -268,7 +269,7 @@ void get_flags( int *argc, char **argv )
       argv[i] = NULL;
     }
     else if (strcmp(argv[i],"-v") == 0) {
-      printf("fst-compiler version %s\n", SFSTVersion);
+      printf("fst-compiler version %s\n", SFST_VERSION);
       exit(0);
     }
     else if (strcmp(argv[i],"-s") == 0) {
@@ -326,8 +327,8 @@ int main( int argc, char *argv[] )
     Result->alphabet.utf8 = UTF8;
     if (Verbose)
       cerr << "\n";
-    if (Result->is_empty()) 
-      warn("result transducer is empty"); 
+    if (Result->is_empty())
+      warn("result transducer is empty");
     if ((file = fopen(argv[2],"wb")) == NULL) {
 	fprintf(stderr,"\nError: Cannot open output file %s\n\n", argv[2]);
 	exit(1);
