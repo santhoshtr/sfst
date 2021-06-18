@@ -8,5 +8,8 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: Create Build Environment
+    - name: Install dependencies
+      run: sudo apt-get install -y clang-tidy
+
+    - name: Run check
       run: mkdir build && cd build && cmake .. && make clang-tidy
