@@ -10,6 +10,7 @@
 #include <errno.h>
 
 #include "compact.h"
+#include "version.h"
 
 using std::cerr;
 using std::vector;
@@ -138,7 +139,7 @@ void get_flags(int *argc, char **argv)
       usage();
       argv[i] = NULL;
     } else if (strcmp(argv[i], "-v") == 0) {
-      printf("fst-infl2 version %s\n", SFSTVersion);
+      printf("fst-infl2 version %s\n", SFST_VERSION);
       exit(0);
     } else if (strcmp(argv[i], "-s") == 0) {
       FlushAfterEachString = true;

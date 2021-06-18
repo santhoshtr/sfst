@@ -18,6 +18,7 @@
 
 #include "Socket.h"
 #include "compact.h"
+#include "version.h"
 
 using std::cerr;
 using std::vector;
@@ -90,7 +91,7 @@ void get_flags(int *argc, char **argv)
       Verbose = false;
       argv[i] = NULL;
     } else if (strcmp(argv[i], "-v") == 0) {
-      printf("fst-infl2-daemon version %s\n", SFSTVersion);
+      printf("fst-infl2-daemon version %s\n", SFST_VERSION);
       exit(0);
     } else if (strcmp(argv[i], "-h") == 0) {
       usage();

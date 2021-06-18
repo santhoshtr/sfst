@@ -10,6 +10,7 @@
 
 #include <math.h>
 
+#include "version.h"
 #include "compact.h"
 
 using std::cerr;
@@ -89,7 +90,7 @@ void get_flags(int *argc, char **argv)
       usage();
       argv[i] = NULL;
     } else if (strcmp(argv[i], "-v") == 0) {
-      printf("fst-train version %s\n", SFSTVersion);
+      printf("fst-train version %s\n", SFST_VERSION);
       exit(0);
     } else if (i < *argc - 1) {
       if (strcmp(argv[i], "-t") == 0) {

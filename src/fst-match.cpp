@@ -8,6 +8,7 @@
 /*******************************************************************/
 
 #include "compact.h"
+#include "version.h"
 
 using std::cerr;
 using std::vector;
@@ -52,7 +53,7 @@ void get_flags(int *argc, char **argv)
       usage();
       argv[i] = NULL;
     } else if (strcmp(argv[i], "-v") == 0) {
-      printf("fst-parse version %s\n", SFSTVersion);
+      printf("fst-parse version %s\n", SFST_VERSION);
       exit(0);
     }
   }
