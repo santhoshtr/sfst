@@ -18,4 +18,4 @@ jobs:
     - name: Run clang-tidy
       working-directory: ${{github.workspace}}/build
       shell: bash
-      run: cmake --build . --target clang-tidy
+      run: make clang-tidy
