@@ -1,0 +1,15 @@
+name: clang-tidy check
+on: [push, pull_request]
+jobs:
+  clang-tidy:
+    name: clang-tidy check
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install dependencies
+      run: sudo apt-get install -y clang-tidy
+
+    - name: Run check
+      run: mkdir build && cd build && cmake .. && make clang-tidy

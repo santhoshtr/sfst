@@ -64,6 +64,9 @@ if(BISON_FOUND AND FLEX_FOUND)
     add_executable(fst-infl2 fst-infl2.cpp compact.cpp robust.cpp)
     target_link_libraries(fst-infl2 libsfst)
 
+    add_executable(fst-infl2-daemon fst-infl2-daemon.cpp compact.cpp robust.cpp)
+    target_link_libraries(fst-infl2-daemon libsfst)
+
     add_executable(fst-infl3 fst-infl3.cpp lowmem.cpp)
     target_link_libraries(fst-infl3 libsfst)
 
@@ -106,4 +109,15 @@ install(TARGETS libsfst
 # Install the headers
 install(FILES ${HEADERS} DESTINATION include)
 
+file(GLOB_RECURSE SOURCE_FILES *.cpp)
 
+find_program(CLANG_TIDY NAMES clang-tidy)
+if (CLANG_TIDY)
+    add_custom_target(
+        clang-tidy
+        COMMAND ${CLANG_TIDY}
+        ${SOURCE_FILES}
+        --
+        -std=c++11
+    )
+endif ()

@@ -201,8 +201,8 @@ void annotate_data(int sockfd)
           transducer[i]->compute_probs(analyses, prob);
           double sum = 0.0;
           for (size_t k = 0; k < analyses.size(); k++) {
-            char *s = transducer[i]->print_analysis(analyses[k]);
-            write(sockfd, s, strlen(s));
+            std::string s = transducer[i]->print_analysis(analyses[k]);
+            write(sockfd, s.c_str(), s.length());
             if (PrintProbs) {
               sprintf(buffer, "\t%f", prob[k]);
               write(sockfd, buffer, strlen(buffer));
@@ -216,8 +216,8 @@ void annotate_data(int sockfd)
           }
         } else
           for (size_t k = 0; k < analyses.size(); k++) {
-            char *s = transducer[i]->print_analysis(analyses[k]);
-            write(sockfd, s, strlen(s));
+            std::string s = transducer[i]->print_analysis(analyses[k]);
+            write(sockfd, s.c_str(), s.length());
             buffer[0] = '\n';
             write(sockfd, buffer, 1);
           }
