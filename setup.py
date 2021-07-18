@@ -114,5 +114,6 @@ setup(
     license="GPLv2",
     ext_modules=[CMakeExtension("sfst")],
     cmdclass={"build_ext": CMakeBuild},
+    package_dir={"": "python"},
     zip_safe=False,
 )
