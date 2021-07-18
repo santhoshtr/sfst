@@ -30,7 +30,7 @@ jobs:
       run: python -m pip install twine build
 
     - name: Build SDist
-      run: python setup.py sdist
+      run: python -m build -s
 
     - name: Check metadata
       run: twine check dist/*
