@@ -2,7 +2,7 @@
 %  File:         smor.fst
 %  Author:       Helmut Schmid; IMS, Universitaet Stuttgart
 %  Date:         April 2003
-%  Content:      main file of the German morphology   
+%  Content:      main file of the German morphology
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 $PHON$ = "<phon.a>"
@@ -35,7 +35,7 @@ $LEX$ = $LEX$ | $Num_Stems$
 % extraction of sublexica
 %**************************************************************************
 
-ALPHABET = [\!-\~¡-ÿ] <FB><SS><n><~n><e><d><Ge-Nom><UL> \
+ALPHABET = [\!-\~¡-ÿ] <FB><SS><n><~n><e><d><ge><Ge-Nom><UL> \
 % category features
 <ABK><ADJ><ADV><CARD><DIGCARD><NE><NN><PRO><V><ORD><OTHER> \
 % stem type features
