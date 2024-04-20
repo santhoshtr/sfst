@@ -1,6 +1,46 @@
 build/
 .vscode
 *.o
+*.a
 *.so
 Makefile
 src/version.h
+_deps
+fst-compiler.H
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Caches
+.cache
+.*_cache
+
+# IDEs
+.vscode
+.idea

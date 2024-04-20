@@ -53,26 +53,18 @@ namespace py = pybind11;
 PYBIND11_MODULE(sfst, m) {
   m.def("init", &init, R"pbdoc(
         Initialize transducer
-
-        Some other explanation about the analyse function.
     )pbdoc");
 
   m.def("analyse", &analyse, R"pbdoc(
         Analyse a string
-
-        Some other explanation about the analyse function.
     )pbdoc");
 
   m.def("generate", &generate, R"pbdoc(
         Generate a string
-
-        Some other explanation about the generate function.
     )pbdoc");
 
   m.def("delete", &delete_transducer, R"pbdoc(
         Delete the transducer instance
-
-        Some other explanation about the generate function.
     )pbdoc");
 
 #ifdef VERSION_INFO
