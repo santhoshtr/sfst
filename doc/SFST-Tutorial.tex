@@ -1,0 +1,1471 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%      File: SFST-Tutorial.tex                                %%%
+%%%    Author: Helmut Schmid                                    %%%
+%%%   Purpose:                                                  %%%
+%%%   Created: Thu Mar  1 14:10:49 2007                         %%%
+%%%  Modified: Thu Aug  8 09:36:38 2024 (schmid)                %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass[11pt]{article}
+
+\usepackage[latin1]{inputenc}
+\usepackage{epsf}
+\usepackage[round]{natbib}
+\usepackage[]{graphicx}
+
+\addtolength{\oddsidemargin}{-1cm}
+\addtolength{\textwidth}{2cm}
+\addtolength{\topmargin}{-1cm}
+\addtolength{\textheight}{2cm}
+\parskip=\medskipamount
+\parindent=0mm
+
+\newenvironment{exercise}{
+
+  \hrulefill\nopagebreak
+
+  \textbf{Exercise~}}
+{
+
+  \nopagebreak\hrulefill\vspace{0.2cm}
+
+}
+
+\newenvironment{excursion}{
+
+  \hrulefill\nopagebreak
+
+  \textbf{Excursion~}}
+{
+
+  \nopagebreak\hrulefill\vspace{0.2cm}
+
+}
+
+
+
+\title{Developing Computational Morphologies\\Using the SFST Tools}
+\author{Helmut Schmid\\\\schmid@cis.lmu.de\\
+  Center for Information and Language Processing\\
+  Ludwig-Maximilians-Universit{\"a}t\\Munich, Germany}
+\date{}
+
+\begin{document}
+\maketitle
+
+\section{Introduction}
+
+This tutorial is intended as a hands-on introduction to the
+implementation of computational morphologies using the Stuttgart
+Finite State Transducer (SFST) tools. It assumes some basic knowledge
+of finite automata and formal languages on the reader's side. Although
+it is primarily concerned with morphology, it might nevertheless be
+also relevant for users working in other areas who want to learn how
+to write SFST programs.
+
+The tutorial is organized as follows: Section~\ref{fundamentals} gives
+a general answer to the question \emph{What is a finite state
+  transducer?} Section~\ref{steps} introduces the most basic concepts
+and operators of the SFST programming language with simple examples.
+Section~\ref{morphology} is the largest section. It contains a
+step-by-step introduction to the implementation of a computational
+morphology using English as the example language.
+
+There is no intention to achieve full coverage of the English
+morphology, here. Only selected phenomena are picked out as instructive
+examples and implemented with finite state transducer programs,
+leaving other similar phenomena as an exercise. Nevertheless, I hope
+that the tutorial is comprehensive enough for the reader to learn all
+he/she needs to implement a computational morphology for English or
+a different language.
+
+This tutorial is preferably read in front of a computer so that the
+reader can immediately test the examples. Of course, the SFST tools
+have to be installed first. They are available at
+\texttt{http://www.ims.uni-stuttgart.de/projekte/gramotron/SOFTWARE/SFST.html}.
+
+The tutorial contains exercises as well as excursions where aspects of
+the SFST syntax and the usage of the SFST tools are addressed in more
+detail. A comprehensive description of the SFST syntax is contained in
+the SFST manual which is part of the SFST software package.
+
+
+\section{Finite State Transducers\label{fundamentals}}
+
+A finite state transducer (FST) is basically a finite state automaton
+where each transition is labeled with a symbol pair rather than a
+single symbol. Figure~\ref{fig:transducer} shows an example. Like
+finite automata, FSTs have a single start state and a set of final
+states. They can be applied in three different ways:
+
+\begin{figure}[htbp]
+  \centerline{\includegraphics[width=7cm]{transducer}}
+  \caption{Example transducer in graphical notation with a black start
+    state and a grey end state}
+  \label{fig:transducer}
+\end{figure}
+
+Analogously to a finite automaton, a FST \emph{accepts} a sequence s
+of symbol pairs (instead of symbols) if there is a path from the start
+state to some final state where the sequence of symbol pairs on the
+transitions is identical to s. The transducer shown in
+figure~\ref{fig:transducer}, for instance, accepts the two sequences
+\texttt{m:m o:o u:u s:s e:e} and \texttt{m:m o:i u: s:c e:e}. The
+second symbol of the symbol pair \texttt{u:} is the \emph{empty}
+symbol.
+
+FSTs are mainly used to map strings to other strings. A typical
+example is morphological analysis where an inflected word form is
+analyzed and the base form is returned with additional morphosyntactic
+information.
+
+The transducer in figure~\ref{fig:transducer} \emph{analyzes} the
+strings \texttt{mouse} and \texttt{mice} and returns the string
+\texttt{mouse} in both cases. In general, a FST maps a string s to a
+string t (in \emph{analysis} mode) if there is a path from the start state to
+some end state where the right-hand side symbols on the transitions
+are identical to s and the left-hand side symbols are identical to
+t.
+
+The mapping is reversible: In \emph{generation} mode, a transducer
+maps a string s to a string t if the left-hand side symbols on the
+transitions of some path from the start state to an end state are
+identical to s and the corresponding right-hand side symbols are
+identical to t. The transducer shown in figure~\ref{fig:transducer}
+generates the strings \texttt{mouse} and \texttt{mice} for the input
+string \texttt{mouse}.
+
+It is often helpful to think of a transducer as a (possibly infinite)
+set of aligned string pairs such as \texttt{m:m o:i u: s:c e:e}, which
+is formed by the set of symbol pair sequences that the transducer
+accepts. The disjunction (operator $|$) of two transducers is then
+equivalent to the union of the two sets of aligned string pairs; the
+conjunction (operator \&) is equivalent to the conjunction of the two
+sets, and the subtraction (operator --) of two transducers is
+equivalent to the set of string pairs appearing in the first set, but
+not in the second.
+
+The concatenation of two transducers includes any string pair
+$s=s_1s_2$ where $s_1$ is in the first set and $s_2$ is in the second
+set of string pairs.
+
+
+\section{First Steps\label{steps}}
+
+The SFST tools provide a programming language for the implementation
+of finite state transducers which is based on extended regular
+expressions. The basic concepts and operators of this language will be
+introduced in this section. More advanced operators will follow in
+section~\ref{morphology}.
+
+
+\subsection{Simple Regular Expressions}
+
+SFST programs are essentially (extended) regular expressions. The expression
+
+\begin{verbatim}
+Hello
+\end{verbatim}
+
+for instance, defines a transducer which accepts the string
+\emph{Hello} and returns the same string as the analysis.
+
+\begin{exercise}
+  Store this expression in a file called \emph{foo.fst} and compile it
+with the command:
+
+\begin{verbatim}
+> fst-compiler foo.fst foo.a
+\end{verbatim}
+
+Start the analyzer program:
+
+\begin{verbatim}
+> fst-mor foo.a
+analyze> Hello
+Hello
+analyze> Hi
+no result for Hi
+\end{verbatim}
+
+In the same way, you can test the transducers presented in
+the following paragraphs.
+\end{exercise}
+
+The following transducer analyzes several strings, namely the strings
+``John'', ``Mary'', and ``James'':
+
+\begin{verbatim}
+John | Mary | James 
+\end{verbatim}
+This transducer expression uses the ``or'' operator ($|$) to build the
+disjunction of the three basic expressions.  Blank and tab characters
+are ignored in SFST programs unless they are quoted by a preceding
+backslash.  The next transducer shows the quotation of the blank
+symbol and the symbol ``!'' which is otherwise interpreted as an
+operator. The transducer accepts the string ``Hello world!''.
+
+\begin{verbatim}
+Hello\ world\!
+\end{verbatim}
+
+SFST supports many of the regular expression operators known from Unix
+tools such as \emph{egrep} or \emph{Perl}. Among them are the
+optionality operator ``?'' (for 0 or 1 repetition), the Kleene
+operators ``*'' (for 0 or more repetitions) and ``+'' (for 1 or more
+repetitions), and the square bracket notation for character ranges
+(including the negation operator \verb#^#).
+The following expression uses these operators. It defines a transducer
+which accepts numbers including fractional numbers with an optional
+sign.
+
+\begin{verbatim}
+[+\-]? [0-9]* (\. [0-9]+)?
+\end{verbatim}
+
+
+\subsection{The Colon Operator}
+
+So far, the transducers simply returned the input string as the
+``analysis''. We will now see how transducers are implemented which
+map strings to other strings. The colon operator (:) is used to
+indicate the target symbol to which a single symbol is to be
+mapped. The transducer \verb#a:b#, for instance, returns an ``a'' in
+analysis mode if a single ``b'' is entered. In generation mode, it is
+the other way around and the ``a'' is mapped to a ``b''.
+
+\underline{Attention:} In the Xerox finite state tools, the direction
+of the colon operator is opposite: The Xerox transducer \verb#a:b#
+would analyze ``a'' as ``b''.
+
+The expression below defines a transducer which maps strings
+consisting of lower-case and upper-case characters to the
+corresponding string of upper-case characters:
+
+\begin{verbatim}
+[A-ZA-Z]:[A-Za-z]*
+\end{verbatim}
+
+The expression \verb#[A-ZA-Z]:[A-Za-z]# is equivalent to the
+disjunction\\ \verb#A:A | B:B | ... | Z:Z | A:a | B:b | ... | Z:z#.
+
+With a similar expression, we can implement a simple word encryptor
+which replaces each character of the input string by the next
+character in the alphabet:
+
+\begin{verbatim}
+[b-zaB-ZA]:[a-zA-Z]*
+\end{verbatim}
+
+Now assume we want to map each character to the next but one character
+in the alphabet. We could do that by applying the above transducer
+twice, mapping the string \emph{cat} first to \emph{dbu} and then to
+\emph{ecv}. This is exactly what the following transducer does:
+
+\begin{verbatim}
+[b-za]:[a-z]* || [b-za]:[a-z]*
+\end{verbatim}
+
+The \emph{composition} operator ``$||$'' applies its left and right
+argument transducers in sequence to the input. The transducer
+eventually generated by the compiler performs the mapping in one
+step. Thus ``a'' is directly mapped to ``c''. You can see that when
+you print the compiled transducer with the command
+\verb#fst-print foo.a#
+
+\begin{verbatim}
+final: 0
+0       c:a     0
+0       h:f     0
+0       q:o     0
+0       f:d     0
+...
+\end{verbatim}
+
+The output of the \emph{fst-print} command shows the list of state
+transitions with the source state, the symbol pair and the target
+state of each transition. The order in which the transitions are
+printed is random and could be different from the one shown above.
+
+
+\section{Developing a Morphology\label{morphology}}
+
+A computational morphology analyzes an inflected word form such as
+``houses'' and usually returns (i) the base form (lemma) ``house'',
+(ii) the part of speech ``Noun'' and (iii) additional features such as
+the number ``plural''.
+
+The lemmatization of the word \emph{cats} to \emph{cat} is
+accomplished by the transducer:
+
+\begin{verbatim}
+cat<>:s
+\end{verbatim}
+
+The operator ':' is here used to map the final symbol ``s'' to the
+\emph{empty symbol} which is represented by ``\verb#<>#''. The above
+expression is an abbreviation of the expression\footnote{Similarly,
+  our first transducer expression \texttt{Hello} was an abbreviation
+  of \texttt{H:He:el:ll:lo:o}.}:
+
+\begin{verbatim}
+c:c a:a t:t <>:s
+\end{verbatim}
+
+The symbol on the left-hand side of a colon belongs to the analysis string,
+the symbol on the right-hand side to the surface string.
+
+In order to add information about the part of speech and the number
+feature to the analysis string, the transducer should be modified as
+follows:
+
+\begin{verbatim}
+cat <Noun>:<> <plural>:s
+\end{verbatim}
+
+\verb#<#Noun\verb#># and \verb#<#plural\verb#># are
+\emph{multi-character symbols} which are treated like a single
+character. The above transducer analyzes the string \emph{cats} by
+(i) mapping the characters ``c'', ``a'', and ``t'' to themselves, (ii)
+inserting the multi-character symbol \verb#<#Noun\verb#>#, and (iii)
+mapping ``s'' to the symbol \verb#<#plural\verb#>#.
+
+\begin{exercise}
+  Store the above expression in the file \emph{morph.fst}, compile it
+  and start \emph{fst-mor}. Analyze the string \emph{cats}. Enter an
+  empty line in order to switch to generation mode and generate the
+  inflected word form for the string
+  ``cat\verb#<#Noun\verb#>#\verb#<#plural\verb#>#''.
+\begin{verbatim}
+analyze> cats
+cat<Noun><plural>
+analyze> 
+generate> cat<Noun><plural>
+cats
+\end{verbatim}
+\end{exercise}
+
+The next transducer produces exactly the same mapping as the
+previous transducer. Nevertheless the two transducers are different
+because the alignment of surface and analysis symbols is different.
+\begin{verbatim}
+cat <Noun>:s <plural>:<>
+\end{verbatim}
+
+We are know ready to implement a simple computational morphology for
+English as shown below.
+
+\begin{verbatim}
+a<Det>:<><sg>:<> |\
+a\.m\.<Adv>:<> |\
+...
+zymurgy:i<>:e<>:s<Noun>:<><pl>:<> |\
+zymurgy<Noun>:<><sg>:<>
+\end{verbatim}
+
+The periods have to be quoted because they have a special
+meaning in SFST. The backslash at the end of the line tells the
+compiler that the expression continues in the following line.
+
+The compilation of this transducer is rather slow. A more efficient
+implementation of the same transducer is obtained by storing most of
+the relevant information in a separate \emph{lexicon} file which is
+processed much faster than regular SFST code because lexicon files use
+a restricted syntax: the only operators available are the colon and
+the backquote. Any other operator symbol and also the blank and tab
+characters are interpreted literally. Multi-character symbols such as
+\verb#<sg># are recognized and treated as a single symbol.
+
+The lexicon file for our simple English full-form morphology has the
+following content:
+
+\begin{verbatim}
+a<Det>:<><sg>:<>
+a.m.<Adv>:<>
+...
+zymurgy:i<>:e<>:s<Noun>:<><pl>:<>
+zymurgy<Noun>:<><sg>:<>
+\end{verbatim}
+
+When the compiler reads the lexicon file, it converts each line into a
+transducer and combines the transducers with an ``or'' operation. This
+is the reason why the $|\backslash$ at the end of the line is missing.
+
+The main program of the transducer looks as follows:
+
+\begin{verbatim}
+"morph.lex"
+\end{verbatim}
+
+This command reads the lexicon file and returns the resulting
+transducer.\footnote{This example will only work with SFST version 1.3
+  or higher. Previous versions treated the multi-character symbols in
+  the lexicon file literally as a sequence of characters because they
+  were not seen before in the main program.}
+\begin{exercise}
+  Store the above line in the file \emph{morph.fst} and create a file
+  \emph{morph.lex} with lexicon entries. Compile \emph{morph.fst} and
+  try to analyze different word forms using \emph{fst-mor}.
+\end{exercise}
+
+\textbf{Caveat:} The file names should only contain ASCII characters!
+
+Adding all the \verb#:<># character sequences in the lexicon file is
+cumbersome and makes the lexicon file less readable. We will later
+see how they can be inserted automatically.
+
+
+\subsection{The Period as a Wildcard Symbol}
+
+The period is a wildcard symbol which stands for any available symbol
+pair. The set of \emph{available} symbol pairs is listed in the
+\emph{alphabet}. The alphabet is defined by a command of the form
+\verb#ALPHABET = ...expression...# and changes whenever this command
+is used. The compiler computes the actual value of the alphabet by
+first compiling \emph{...expression...} to a transducer and then
+extracting all symbol pairs occurring on transitions of the resulting
+transducer. All of the following commands define the alphabet as the
+set \{a:a,b:b,c:b\}:
+
+\begin{verbatim}
+ALPHABET = a b c:b
+ALPHABET = a | b | c:b
+ALPHABET = [a-c]:[ab]
+\end{verbatim}
+
+The expression \verb#[a-c]:[ab]# is first expanded to
+\verb#[abc]:[ab]# and then to \verb#a:a|b:b|c:b#.
+
+The next transducer program replaces lower-case characters with
+upper-case characters.
+
+\begin{verbatim}
+ALPHABET = [A-Z] [A-Z]:[a-z]
+.*
+\end{verbatim}
+
+The alphabet is here defined as the set \{A:A, B:B, ..., Z:Z, A:a,
+B:b, ..., Z:z\}. The wildcard symbol ``.'' is replaced by the
+disjunction of all these character pairs. The resulting transducer is
+equivalent to the transducer \verb#[A-ZA-Z]:[A-Za-z]*#  seen earlier.
+
+We are now ready to define a new version of our morphology which
+deletes the part-of-speech and feature symbols in the surface string
+of the transducer.
+
+\begin{verbatim}
+ALPHABET = [a-zA-Z\.] [<Det><Noun><Verb><Adj><Adv><Prep><sg><pl>]:<>
+"morph.lex" || .*
+\end{verbatim}
+
+The corresponding lexicon file looks as follows:
+
+\begin{verbatim}
+a<Det><sg>
+a.m.<Adv>
+...
+zymurgy:i<>:e<>:s<Noun><pl>
+zymurgy<Noun><sg>
+\end{verbatim}
+
+
+
+\subsection{Inflection Classes}
+
+In order to avoid an explicit enumeration of all the possible
+inflected word forms for a given lemma (such as \emph{walk},
+\emph{walks}, \emph{walked}, \emph{walking} for the verb \emph{to
+  walk}), we can put all lemmas belonging to the same inflection class
+into a separate lexicon file and add the different inflectional
+endings in the main program. The lexicon file \emph{verb-reg.lex} for
+regular verbs might contain the following entries:
+\begin{verbatim}
+walk
+gain
+mention
+\end{verbatim}
+These verbs are inflected by adding either \emph{s}, \emph{ed},
+\emph{ing}, or nothing. The following transducer program reads the
+lexicon and adds the endings.
+\begin{verbatim}
+"verb-reg.lex" <Verb>:<> (\
+  {<3s>}:{s} |\
+  {<past>}:{ed} |\
+  {<part>}:{ed} |\
+  {<gerund>}:{ing} |\
+  {<n3s>}:{} |\
+  {<base>}:{})
+\end{verbatim}
+
+The expression \verb#{<past>}:{ed}# is equivalent to
+\verb#<past>:e<>:d#. The symbols from the two symbol sequences which
+are enclosed in curly brackets are pairwise combined, adding empty
+symbols at the end as needed.
+
+The parentheses are needed to indicate that \verb#<Verb>:<># is
+concatenated with the disjunction of all endings and not just with
+\verb#{<3s>}:{s}#.
+
+Similarly, we create a lexicon file \emph{noun-reg.lex} for nouns with
+regular nominal inflection:
+
+\begin{verbatim}
+cat
+house
+door
+\end{verbatim}
+
+and extend the transducer program. The transducer is now so complex,
+that it is better to build it in several steps, using the variables
+\verb#$verb-reg-infl$# and \verb#$noun-reg-infl$# to store intermediate
+transducers:
+
+\begin{verbatim}
+$verb-reg-infl$ = <Verb>:<> (\
+  {<3s>}:{s} |\
+  {<past>}:{ed} |\
+  {<part>}:{ed} |\
+  {<gerund>}:{ing} |\
+  {<n3s>}:{} |\
+  {<base>}:{})
+
+$noun-reg-infl$ = <Noun>:<> (\
+  {<sg>}:{} |\
+  {<pl>}:{s})
+
+"verb-reg.lex" $verb-reg-infl$ |\
+"noun-reg.lex" $noun-reg-infl$
+\end{verbatim}
+
+\begin{exercise}
+  Extend the above program with adjectival inflection. The transducer
+  should be able to analyze the word forms
+  \emph{quick/quicker/quickest}.
+\end{exercise}
+
+\begin{excursion}
+  When a transducer program fails to produce the correct results, the
+  following debugging strategies might be helpful:
+  
+  Store intermediate transducers \texttt{\$T\$} in a file using commands
+  such as \verb#$T$ >> "file.a"# within the SFST program. Call
+  \texttt{fst-generate file.a} in the shell to generate mappings from
+  analysis strings to surface strings allowed by the intermediate
+  transducer. Check whether the results are as expected.
+  
+  If the compilation of the transducer takes a long time because the
+  lexicon is very large, replace the lexicon with a smaller one
+  containing only entries which are relevant for debugging.
+\end{excursion}
+
+
+\subsection{Negation}
+
+SFST has two different complement (or negation) operators. The
+expression \verb#[^b]# represents the set of all symbols without
+``b''. \emph{All symbols} means \emph{all symbols used in the program
+  up to this point}. Therefore, the transducer \verb#a:[^b]# maps (in
+generation mode) the character ``a'' to any symbol encountered before
+except ``b''.
+
+``!'' is the negation operator for transducers.  \verb#!$T$# is
+equivalent to \verb#.* - $T$# which is the set of all mappings allowed
+by the alphabet (\verb#.*#) minus the set of mappings performed by the
+transducer which is stored in \verb#$T$#. Note that \verb#!a:b# is
+very different from \verb#a:[^b]#.
+
+
+
+\subsection{Orthographic and Phonological Rules}
+
+We can treat verbs such as \emph{to paste} as regular verbs if we add
+a rule \emph{delete-e} which deletes the final ``e'' when a vowel
+follows. The deletion rule is implemented with the two-level-rule
+operation \verb#e<=><> (<Verb>:<> [ei])# which replaces ``e'' by the
+empty symbol if and only if the symbol \verb#<VERB># and an ``e'' or an
+``i'' follows.
+
+\begin{verbatim}
+$verb-reg-infl$ = <Verb> ({<3s>}:{s} | {<past>}:{ed} |\
+  {<part>}:{ed} |{<gerund>}:{ing} | {<n3s>}:{} | {<base>}:{})
+
+$noun-reg-infl$ = <Noun> ({<sg>}:{} | {<pl>}:{s})
+
+$morph$ = "verb-reg.lex" $verb-reg-infl$ | "noun-reg.lex" $noun-reg-infl$
+
+ALPHABET = [A-Za-z] [<Verb><Noun>]:<> e:<>
+$delete-e$ = e <=> <> (<Verb>:<> [ei])
+
+$morph$ || $delete-e$
+\end{verbatim}
+
+In contrast to the previous version, the \verb#<Verb># symbol is not
+immediately deleted at the surface level when the inflection
+transducer \verb#$verb-reg-infl$# is created. Instead it is preserved
+here to indicate the position where the deletion rule is to be
+applied. Without this marker, the rule would also delete an ``e'' in
+verbs such as \emph{to feel} or \emph{to unveil}.  The deletion rule
+is applied by composing the morphology transducer stored in
+\verb#$morph$# with the rule transducer stored in \verb#$delete-e$#:
+
+\begin{exercise}
+  Add the lemma \emph{paste} to the lexicon file \emph{verb-reg.lex},
+  compile the above transducer, and use it to analyze and generate
+  word forms.
+  
+  Extend the program such that the word forms \emph{later} and
+  \emph{latest} are correctly analyzed.
+\end{exercise}
+
+Two-level rules have to be preceded by the definition of an alphabet
+which comprises all symbol pairs that will appear in the
+two-level-rule transducer. The proper definition of the alphabet is
+very important. Omissions (or insertions) often have severe
+consequences. The above alphabet specifies that the \verb#<Verb>#
+symbol is to be deleted. Therefore, we have to write \verb#<Verb>:<>#
+rather than \verb#<Verb># in the context part of the rule. Otherwise,
+the rule would never match because a two-level rule specifies both,
+the analysis and the surface layer of the rule context.
+
+
+\begin{excursion}
+  The compiler translates two-level rules to complex transducer
+  expressions. The rule \verb#L a<=>b R# (where L and R are some
+  transducer expressions) is first replaced by a conjunction of two
+  more basic rules: \verb#L a<=b R & L a=>b R#.
+  
+  The rule \verb#L a<=b R# means: \emph{Whenever ``a'' appears between
+    ``L'' and ``R'', it has to be mapped to ``b''.} (This rule still
+  allows ``a'' to be mapped to ``b'' in other contexts.)
+  
+  The rule \verb#L a=>b R# means: \emph{The mapping of ``a'' to ``b''
+    is only allowed if ``L'' precedes and ``R'' follows.} (It also
+  allows that ``a'' is mapped to something else in the given context.)
+  
+  The rule \verb#L a<=b R# is equivalent to the expression  
+  \verb#!(.*L (a:. & !a:b) R.*)#. The sub-expression \verb#a:. & !a:b#
+  represents the set of all mappings of ``a'' allowed by the alphabet
+  except for the mapping ``a:b''\footnote{Note that the expression
+    \texttt{a:.  \& !a:b} is not equivalent to \texttt{a:[$\hat{~}$b]}
+    because the latter expression includes symbol pairs which are not
+    part of the alphabet.}.
+  The expression\verb#.*L (a:. & !a:b) R.*# comprises all mappings of
+  strings allowed by the alphabet that include an illicit mapping of
+  ``a'' to a symbol other than ``b'' in the context \verb#L...R#. Its
+  negation  \verb#!(.*L (a:. & !a:b) R.*)# includes all string
+  mappings without such an illicit substring mapping.
+  
+  The rule \verb#L a=>b R# is replaced by the expression
+  \verb#!(!(.*L) a:b .* | .* a:b !(R.*))#. The sub-expression
+  \verb#!(.*L) a:b .*# includes all string mappings where the mapping
+  a:b occurs with a wrong left context. \verb#.* a:b !(R.*)# includes
+  all mappings where the mapping a:b occurs with an incorrect right
+  context.  \verb#!(!(.*L) a:b .* | .* a:b !(R.*))#.
+  \verb#!(.*L) a:b .*# therefore includes the set of string mappings
+  allowed by the alphabet where the mapping a:b neither occurs with
+  the wrong left context nor with the wrong right context. In other
+  words, a:b only occurs with the correct left and right context.
+  
+  
+  ``L'' and ``R'' are any transducer expressions. They should always
+  be enclosed in parentheses in order to avoid problems with operator
+  precedence.
+\end{excursion}
+
+We can write a rule which is similar to the \emph{delete-e} rule to
+replace ``y'' with ``i'' if ``e'' follows. This rule correctly maps
+the string \emph{apply<Verb>ed} to \emph{applied} (in generation mode).
+
+\begin{verbatim}
+$verb-reg-infl$ = <Verb> ({<3s>}:{s} | {<past>}:{ed} |\
+  {<part>}:{ed} | {<gerund>}:{ing} | {<n3s>}:{} | {<base>}:{})
+$noun-reg-infl$ = <Noun> ({<sg>}:{} | {<pl>}:{s})
+$morph$ = "verb-reg.lex" $verb-reg-infl$ | "noun-reg.lex" $noun-reg-infl$
+
+ALPHABET = [A-Za-z] [<Verb><Noun> e]:<> y:i
+
+$delete-e$ = e <=> <> (<Verb>:<> [ei])
+$y-to-i$ = y <=> i (<Verb>:<> e)
+
+$morph$ || ($delete-e$ & $y-to-i$)
+\end{verbatim}
+
+The above transducer combines the two-level rules with a conjunction
+operation (\&). 
+
+\begin{excursion}
+  The conjunction (or intersection) of two transducers T1 and T2 maps
+  a string ``s'' to a string ``t'' iff both T1 and T2 map ``s'' to
+  ``t'' \emph{via the same alignment} of surface and analysis symbols.
+  The last point is important. Although both of the following
+  transducers produce the analysis \emph{cat$\langle$N$\rangle$$\langle$pl$\rangle$} for the string
+  \emph{cats}, their conjunction is nevertheless empty:
+
+\begin{verbatim}
+$T1$ = cat<>:s<N>:<><pl>:<>
+$T2$ = cat<N>:s<pl>:<>
+$T1$ & $T2$
+\end{verbatim}
+
+\end{excursion}
+
+The combination of orthographic rules by conjunction often leads to
+unexpected interactions between the rules which are difficult to
+foresee, increase rapidly with the number of rules, and complicate the
+development process. Therefore it is usually better to combine
+two-level rules with composition (i.e.\ to apply them in sequence
+rather than in parallel).
+
+The following transducer composes the two-level rules and is otherwise
+equivalent to the previous transducer. The part-of-speech labels are
+deleted in a separate step. Note that the two rules now require
+different alphabet definitions.
+
+\begin{verbatim}
+$verb-reg-infl$ = <Verb> ({<3s>}:{s} | {<past>}:{ed} |\
+  {<part>}:{ed} | {<gerund>}:{ing} | {<n3s>}:{} | {<base>}:{})
+$noun-reg-infl$ = <Noun> ({<sg>}:{} | {<pl>}:{s})
+$morph$ = "verb-reg.lex" $verb-reg-infl$ | "noun-reg.lex" $noun-reg-infl$
+
+ALPHABET = [A-Za-z] <Verb><Noun> e:<>
+$delete-e$ = e <=> <> (<Verb> [ei])
+
+ALPHABET = [A-Za-z] <Verb><Noun> y:i
+$y-to-i$ = y <=> i (<Verb> e)
+
+ALPHABET = [A-Za-z] [<Verb><Noun>]:<>
+$delete-POS$ = .*
+
+$morph$ || $delete-e$ || $y-to-i$ || $delete-POS$
+\end{verbatim}
+
+This transducer still fails to produce the word form \emph{applies}.
+In order to generate it, we need to substitute ``y'' with ``ie''. A
+two-level rule can only substitute a single symbol with zero or one,
+but not with two symbols. Thus a more powerful \emph{string
+replacement operation} (shown in the next example) has to be used
+instead.
+
+\begin{verbatim}
+...
+ALPHABET = [A-Za-z] <Verb><Noun>
+$y-to-ie$ = {y}:{ie} ^-> (__ [<Verb><Noun>] s)
+
+$morph$ || $delete-e$ || $y-to-i$ || $y-to-ie$ || $delete-POS$
+\end{verbatim}
+
+The expression \verb#{y}:{ie} ^-> (__ [<Verb><Noun>] s)# defines a
+transducer which maps the string ``y'' to the string ``ie'' iff it is
+followed by either \verb#<Noun># or \verb#<Verb># and an ``s''. Any
+other symbol than a ``y'' in this particular context is mapped
+according to the alphabet, i.e.\ mapped to itself. This rule will also
+produce the plural noun form \emph{hobbies} if we add the lemma
+\emph{hobby} to the lexicon file \emph{noun-reg.lex}.
+
+There are two important differences between the two-level rules and
+the replace rule: The context of the two-level rules specifies the
+symbols on the analysis level as well as on the surface level, whereas
+the replace operation only specifies the symbols on the analysis
+level.
+
+The other difference between the two types of rules concerns the
+definition of the alphabet. The two-level rule
+\verb#y <=> i (<Verb> e)# requires that the symbol pair y:i is added
+to the alphabet. The alphabet for the rule
+\verb#{y}:{ie} ^-> (__ [<Verb><Noun>] s)#, on the other hand, only
+contains the symbol pairs appearing outside of the replaced
+substring(s).
+
+\begin{excursion}
+  Replace operations have the general form \verb# T ^-> (L__R)#, where
+  T is a transducer expression and L and R are automata, i.e.\ 
+  transducers which map strings only to themselves. A replace
+  operation performs the following mapping: If T maps some string
+  ``s'' to a string ``t'', then the replace transducer substitutes any
+  substring ``s'' of the input string with ``t'' (in generation mode)
+  if and only if it appears with the left context L and right context
+  R. Any other substring is mapped according to the alphabet.
+  
+  The replace operator \verb#^-># matches the contexts L and R with
+  the symbols on the analysis level. There are three other, less
+  frequently used variants of the replace operator, namely (1)
+  \verb#_->#, (2) \verb#/->#, and (3) \verb#\-># which match (1) the
+  left and right contexts with the \emph{surface} symbols, (2) the
+  left context with the surface symbols and the right context with the
+  analysis symbols, and (3) the left context with the analysis symbols
+  and the right context with the surface symbols.
+\end{excursion}
+
+Another orthographic rule is needed to duplicate the final
+consonant in the comparative and superlative forms of adjectives such
+as \emph{big}, \emph{red}, \emph{thin}, or \emph{flat}. The following
+partial program shows one possible implementation of such a rule. It
+includes comments which start with the character ``\%'' and extend up
+to the end of the line.
+
+\begin{verbatim}
+$verb-reg-infl$ = <Verb> ({<3s>}:{s} | {<past>}:{ed} | {<part>}:{ed} |\
+  {<gerund>}:{ing} | {<n3s>}:{} | {<base>}:{})
+$noun-reg-infl$ = <Noun> ({<sg>}:{} | {<pl>}:{s})
+$adj-reg-infl$ = <Adj>\
+  ({<pos>}:{} | {<comp>}:{er} | {<sup>}:{est})
+
+$morph$ = "verb-reg.lex" $verb-reg-infl$ |\
+  "noun-reg.lex" $noun-reg-infl$ | "adj-reg.lex"  $adj-reg-infl$
+
+ALPHABET = [A-Za-z] <Verb><Noun><Adj> e:<>
+$delete-e$ = e <=> <> (<Verb> [ei])
+
+ALPHABET = [A-Za-z] <Verb><Noun><Adj> y:i
+% also covers happy -> happily
+$y-to-i$ = y <=> i ([<Verb><Adj>] [el])
+
+ALPHABET = [A-Za-z] <Verb><Noun><Adj>
+$y-to-ie$ = {y}:{ie} ^-> (__ [<Verb><Noun>] s)
+
+ALPHABET = [A-Za-z] [<Verb><Noun><Adj>]:<>
+$delete-POS$ = .*
+
+% consonants
+$c$ = [bcdfghjklmnprstvwxz]
+% vowels
+$v$ = [aeiou]
+% duplication of the consonant
+$T$ = b<>:b | d<>:d | g<>:g | l<>:l | m<>:m | n<>:n | p<>:p | t<>:t
+ALPHABET = [A-Za-z] <Verb><Noun><Adj>
+% the complete duplication rule
+$duplicate$ = $T$ ^-> ($c$$v$ __ <Adj> e(r|st))
+
+$R$ = $delete-e$ || $y-to-i$ || $y-to-ie$ || $duplicate$ || $delete-POS$
+$morph$ || $R$
+\end{verbatim}
+
+\begin{exercise}
+  Add morpho-phonological rules for other phenomena such as the
+  e-insertion in the plural forms of nouns ending with ``s'' or ``x''.
+\end{exercise}
+
+\subsection{Agreement Variables}
+
+Agreement variables are special \emph{synchronized} variables whose name
+starts with the symbol ``=''. All appearances of agreement variables
+in a regular expression are guaranteed to have identical values. The
+following program, for instance, defines a transducer which recognizes
+the strings \emph{bib}, \emph{did}, and \emph{gig} and nothing else.
+
+\begin{verbatim}
+$=1$ = [bdg]
+$=1$ i $=1$
+\end{verbatim}
+
+The following transducer expression shows how agreement variables can
+\begin{verbatim}
+#=C# = bdglmnpt
+$T$ = {[#=C#]}:{[#=C#][#=C#]}
+\end{verbatim}
+be used to implement the duplication operation
+\verb#$T$ = b<>:b | d<>:d |...# which was previously used to generate
+word forms such as \emph{bigger}. We need a new type of variables here
+whose value is a set of symbols rather than a transducer. Such symbol
+set variables have to be enclosed with hash symbols. If the name
+begins with ``='', the variable is in addition an agreement variable.
+
+
+\subsection{Compounding}
+
+So far, we have only dealt with inflection. Another important
+morphological process is \emph{compounding}. It creates words such as
+\emph{whiteboard}, \emph{sunlight}, or \emph{workday} by concatenating
+two stems. Only the second stem is inflected. The following transducer
+will analyze these forms (if the missing stems are added to the
+respective lexicon files).
+
+\begin{verbatim}
+$noun-reg-infl$ = <Noun>:<> ({<sg>}:{} | {<pl>}:{s})
+$noun-reg$ = \
+  ("noun-reg.lex" | "verb-reg.lex" | "adj-reg.lex")? "noun-reg.lex"
+$noun-reg$ $noun-reg-infl$
+\end{verbatim}
+
+
+\subsection{Derivation}
+
+Derivation is a third morphological process which generates new word
+forms by modifying a given stem usually with affixation. From the stem
+\emph{reach}, we can derive the word \emph{reachable} by adding the
+suffix \emph{able}. Further adding the prefix \emph{un}, we obtain
+\emph{unreachable}, and with the suffix \emph{ity}, we finally get
+\emph{unreachability}. The first two derivation steps are purely
+concatenative, whereas the third step requires the mapping of
+\emph{able} to \emph{abil}.
+
+The following transducer will correctly analyze the words
+\emph{reachable} and \emph{unreachable} if the stem \emph{reach} is
+added to the verb lexicon.
+
+\begin{verbatim}
+...
+
+% lexicon entries are read from the lexicon files
+$verb-reg$ = "verb-reg.lex"
+$noun-reg$ = "noun-reg.lex"
+$adj-reg$  = "adj-reg.lex"
+
+% derivation of adjectives from verbs
+$adj-reg$ = $adj-reg$ | $verb-reg$ able
+% prefixation of adjectives
+$adj-reg$ = (un)? $adj-reg$
+
+$morph$ = $noun-reg$ $noun-reg-infl$ |\
+          $verb-reg$ $verb-reg-infl$ |\
+          $adj-reg$  $adj-reg-infl$
+
+$morph$ || $delete-e$ || $y-to-i$ || $y-to-ie$ || $duplicate$ || $delete-POS$
+\end{verbatim}
+
+This SFST program will generate the incorrect form
+\emph{translateable} instead of \emph{translatable}. The verb-final
+``e'' should be eliminated. We already have a rule which deletes ``e''
+if the symbol \verb#<Verb># and either ``e'' or ``i'' follows. We must
+add the vowel ``a'' to this list. Furthermore, we have to make sure
+that the symbol \verb#<Verb># appears between \emph{translate} and
+\emph{able}, because the rule is not applicable, otherwise.
+
+To this end, we reorganize the program. The part-of-speech markers are
+added at a different location. As a side-effect, we get slightly
+different compound analyzes: The word \emph{whiteboards} will now be
+analyzed as \verb#white<Adj>boards<Noun><pl>#. We also define variables
+for frequently used symbol sets which are then used throughout the
+program. This modification makes it easier to add new characters like
+{\'e} or {\~n}, or new part of speech symbols because it suffices
+to add them to the respective symbol set.
+
+\begin{verbatim}
+#cons# = bcdfghjklmnprstvwxz
+#vowel# = aeiou
+#letter# = a-z
+#LETTER# = A-Z
+#Letter# = #LETTER# #letter#
+#pos# = <Adj><Noun><Verb>
+#sym# = #Letter# #pos#
+
+$verb-reg-infl$ = (\
+  {<3s>}:{s} |\
+  {<past>}:{ed} |\
+  {<part>}:{ed} |\
+  {<gerund>}:{ing} |\
+  {<n3s>}:{} |\
+  {<base>}:{})
+
+$noun-reg-infl$ = (\
+  {<sg>}:{} |\
+  {<pl>}:{s})
+
+$adj-reg-infl$ = (\
+  {<pos>}:{} |\
+  {<comp>}:{er} |\
+  {<sup>}:{est})
+
+% lexicon entries are read from the lexicon files
+$verb-reg$ = "verb-reg.lex" <Verb>
+$noun-reg$ = "noun-reg.lex" <Noun>
+$adj-reg$  = "adj-reg.lex" <Adj>
+
+% noun compounds
+$noun-reg$ = ($noun-reg$ | $verb-reg$ | $adj-reg$)? $noun-reg$
+
+% derivation of adjectives from verbs
+$adj-reg$ = $adj-reg$ | $verb-reg$ able
+% prefixation of adjectives
+$adj-reg$ = (un)? $adj-reg$
+
+$morph$ = $noun-reg$ $noun-reg-infl$ |\
+          $verb-reg$ $verb-reg-infl$ |\
+          $adj-reg$  $adj-reg-infl$
+
+
+ALPHABET = [#sym#] e:<>
+$delete-e$ = e <=> <> (<Verb> [aei])
+
+ALPHABET = [#sym#] y:i
+$y-to-i$ = y <=> i ([<Verb><Adj>] [el])
+
+ALPHABET = [#sym#]
+$y-to-ie$ = {y}:{ie} ^-> (__ [<Verb><Noun>] s)
+
+#=D# = bdglmnpt
+$T$ = {[#=D#]}:{[#=D#][#=D#]}
+
+ALPHABET = [#sym#]
+$duplicate$ = $T$ ^-> ([#cons#][#vowel#] __ <Adj> e(r|st))
+
+ALPHABET = [#Letter#] [#pos#]:<>
+$delete-POS$ = .*
+
+$R$ = $delete-e$ || $y-to-i$ || $y-to-ie$ || $duplicate$ || $delete-POS$
+
+$morph$ || $R$
+\end{verbatim}
+
+\begin{exercise}
+  Extend the morphology with a rule for the derivation of adverbs
+  (\emph{quickly}) from adjectives (\emph{quick}).
+\end{exercise}
+
+\subsection{Irregular Inflection}
+
+Thus far, the morphology covers regular inflection such as
+\emph{edit/edited/editing}, or \emph{paste/pasting/pasted}, but not
+irregular inflection such as \emph{throw/threw/thrown} or
+\emph{admit/admitting/admitted}. The inflection of the verb
+\emph{admit} can be handled with rules if stress information is
+encoded in the lexicon\footnote{The consonant has to be reduplicated
+  if the last syllable is stressed.}. If not, a separate inflection
+class has to be defined, instead. The following fragment shows how to
+do it.
+
+\begin{verbatim}
+...
+#pos# = <Adj><Noun><Verb>
+#trigger# = <dup>
+#mcs# = #pos# #trigger#
+#sym# = #Letter# #mcs#
+...
+$verb-dup-infl$ = (\
+  {<3s>}:{s} |\
+  {<past>}:{<dup>ed} |\
+  {<part>}:{<dup>ed} |\
+  {<gerund>}:{<dup>ing} |\
+  {<n3s>}:{} |\
+  {<base>}:{})
+...
+$verb-dup$ = "verb-dup.lex" <Verb>
+...
+ALPHABET = [#sym#]
+$duplicate$ = $T$ ^-> ([#cons#][#vowel#] __ (<Adj> e(r|st) | <Verb><dup>))
+
+ALPHABET = [#Letter#] [#mcs#]:<>
+$delete-POS$ = .*
+...
+\end{verbatim}
+
+The inflection rules for the new verb class \emph{verb-dup} insert the
+symbol \texttt{<dup>} in the gerund, past tense, and past participle
+forms. This symbol triggers the application of the modified
+\texttt{duplicate} rule. It is later deleted by the
+\texttt{delete-pos} rule and doesn't appear in the result transducer.
+The insertion of trigger symbols is a frequently used trick in
+finite-state morphology.
+
+If some verb forms are completely irregular such as
+\emph{sit/sat/sat}, it is often easier to add special lexical
+entries for the irregular forms than to implement complex
+morpho-phonological rules. We could define two new inflection classes:
+a class \texttt{verb-pres-ger2} which derives \emph{sit/sits/sitting}
+from the lexicon entry \emph{sit} and another class
+\texttt{verb-past-part} with the entry \texttt{si:at} for the past
+tense and past participle forms.
+
+\begin{verbatim}
+...
+$verb-pres-ger2-infl$ = (\
+  {<3s>}:{s} |\
+  {<gerund>}:{<dup>ing} |\
+  {<n3s>}:{} |\
+  {<base>}:{})
+
+$verb-past-part-infl$ = (\
+  {<past>}:{} |\
+  {<part>}:{})
+...
+$verb-pres-ger2$ = "verb-pres-ger2.lex" <Verb>
+$verb-past-part$ = "verb-past-part.lex" <Verb>
+...
+$morph$ = ...
+          $verb-pres-ger2$ $verb-pres-ger2-infl$ |\
+          $verb-past-part$ $verb-past-part-infl$ |\
+...
+\end{verbatim}
+
+\begin{exercise}
+  Extend the morphology with two new inflection classes, one to
+  generate the forms \emph{throw/throws/throwing/thrown},
+  \emph{see/sees/seeing/seen}, and \emph{fall/falls/falling/fallen}
+  and another class for the past tense forms \emph{threw}, \emph{saw},
+  and \emph{fell}. 
+  
+  You have to add a morpho-phonological rule to insert the ``e'' in
+  \emph{fallen}. Note that you cannot use two-level rules and replace
+  rules to replace the empty symbol with ``e''. Use a rule replacing
+  \texttt{n} with \texttt{en}, instead.
+\end{exercise}
+
+
+\subsection{A Single Lexicon}
+
+Having a separate lexicon file for each inflection class is not ideal.
+A single lexicon file is easier to maintain. Therefore we merge all
+the sublexica and add a multi-character symbol to each entry which
+specifies the inflection class. The new lexicon \texttt{morph.lex} looks
+as follows:
+
+\begin{verbatim}
+board<N-reg>
+...
+big<A-reg>
+...
+apply<V-reg>
+...
+admit<V-dup>
+...
+sit<V-pres-ger2>
+...
+si:at<V-past-part>
+\end{verbatim}
+
+Now, the transducer program has to be modified. We split it into
+several smaller sections. The main file \texttt{morph.fst} includes
+the auxiliary file \texttt{symbols.fst} via the command
+\verb@#include "symbols.fst"@ which literally inserts the contents of
+\texttt{symbols.fst} at the current position.
+
+The other new files, \texttt{inflection.fst} and \texttt{phon.fst},
+are separately compiled.  The main file includes the compiled binary
+transducers with the expressions \verb#"<inflections.a>"# and
+\verb#"<phon.a>"#. The separate compilation of different parts of the
+transducer program speeds up the whole compilation process if the
+recompilation of transducers whose source files are unchanged is
+avoided.
+
+The file \texttt{symbols.fst} contains the definitions of the symbol
+set variables. Corresponding transducer variables are also 
+added. The new variable \texttt{\#infl\#} comprises the set of
+inflection class labels.
+
+The inflectional endings for each inflection class are defined in
+\texttt{inflection.fst}. The endings now include inflectional class
+labels such as \texttt{V-reg}. All endings are merged into a single
+transducer which is stored in the result file \texttt{inflection.a}.
+
+The main program \texttt{morph.fst} reads the lexicon from
+\texttt{morph.lex} and composes the resulting transducer with the
+expression \verb@$Letter$* <>:[#infl#]@ in order to delete the
+inflection class labels in the analysis layer. 
+
+The next line concatenates the lexicon transducer and the pre-compiled
+inflection transducer which is read from \texttt{inflection.a}. The
+result includes many incorrect combinations of stems and endings such
+as \texttt{clean<>:<A-reg><>:<N-reg><Noun><sg>:<>}. 
+
+These will be eliminated by the inflection filter which is defined
+next. The filter transducer maps a sequence of letters followed by two
+identical inflectional class labels and arbitrary other symbols to a
+new string where the class labels have been deleted. The composition
+of the filter transducer with the previous transducer returns a new
+transducer containing only the correct combinations of stems and
+endings. The other combinations are rejected by the filter transducer.
+
+The last command composes the morphology transducer with the
+morpho-phonological rules and returns the result transducer.
+
+\begin{verbatim}
+%%%%%%%%%%%%%%% symbols.fst %%%%%%%%%%%%%%%%
+
+#cons# = bcdfghjklmnprstvwxz
+#vowel# = aeiou
+#letter# = a-z
+#LETTER# = A-Z
+#Letter# = #LETTER# #letter#
+#pos# = <Adj><Noun><Verb>
+#infl# = <A-reg><N-reg><V-reg><V-dup><V-pres-ger2><V-past-part>
+#trigger# = <dup>
+#mcs# = #pos# #trigger#
+#sym# = #Letter# #mcs# #infl#
+
+$cons$ = [#cons#]
+$vowel$ = [#vowel#]
+$letter$ = [#letter#]
+$LETTER$ = [#LETTER#]
+$Letter$ = [#Letter#]
+$pos$ = [#pos#]
+$infl$ = [#infl#]
+$trigger$ = [#trigger#]
+$mcs$ = [#mcs#]
+$sym$ = [#sym#]
+
+%%%%%%%%%%%%%% inflection.fst %%%%%%%%%%%%%%
+
+$noun-reg-infl$ = <>:<N-reg> <Noun> (\
+  {<sg>}:{} |\
+  {<pl>}:{s})
+
+$adj-reg-infl$ = <>:<A-reg> <Adj> (\
+  {<pos>}:{} |\
+  {<comp>}:{er} |\
+  {<sup>}:{est})
+
+$verb-reg-infl$ = <>:<V-reg> <Verb> (\
+  {<3s>}:{s} |\
+  {<past>}:{ed} |\
+  {<part>}:{ed} |\
+  {<gerund>}:{ing} |\
+  {<n3s>}:{} |\
+  {<base>}:{})
+
+$verb-dup-infl$ = <>:<V-dup> <Verb> (\
+  {<3s>}:{s} |\
+  {<past>}:{<dup>ed} |\
+  {<part>}:{<dup>ed} |\
+  {<gerund>}:{<dup>ing} |\
+  {<n3s>}:{} |\
+  {<base>}:{})
+
+$verb-pres-ger2-infl$ = <>:<V-pres-ger2> <Verb> (\
+  {<3s>}:{s} |\
+  {<gerund>}:{<dup>ing} |\
+  {<n3s>}:{} |\
+  {<base>}:{})
+
+$verb-past-part-infl$ = <>:<V-past-part> <Verb> (\
+  {<past>}:{} |\
+  {<part>}:{})
+
+$noun-reg-infl$ | $adj-reg-infl$ | $verb-reg-infl$ |\
+$verb-dup-infl$ | $verb-pres-ger2-infl$ | $verb-past-part-infl$
+
+
+%%%%%%%%%%%%%%%% phon.fst %%%%%%%%%%%%%%%%%%
+
+#include "symbols.fst"
+
+ALPHABET = [#sym#] e:<>
+$delete-e$ = e <=> <> (<Verb> [aei])
+
+ALPHABET = [#sym#] y:i
+$y-to-i$ = y <=> i ([<Verb><Adj>] [el])
+
+ALPHABET = [#sym#]
+$y-to-ie$ = {y}:{ie} ^-> (__ [<Verb><Noun>] s)
+
+#=D# = bdglmnpt
+$T$ = {[#=D#]}:{[#=D#][#=D#]}
+
+ALPHABET = [#sym#]
+$duplicate$ = $T$ ^-> ([#cons#][#vowel#] __ (<Adj> e(r|st) | <Verb><dup>))
+
+ALPHABET = [#Letter#] [#mcs#]:<>
+$delete-POS$ = .*
+
+$delete-e$ || $y-to-i$ || $y-to-ie$ || $duplicate$ || $delete-POS$
+
+
+%%%%%%%%%%%%%%% morph.fst %%%%%%%%%%%%%%%%%%
+
+#include "symbols.fst"
+
+% Read the lexicon and
+% delete the inflection class  on the analysis layer
+
+$lex$ = ($Letter$* <>:[#infl#]) || "morph.lex"
+
+% Concatenate stems with the inflectional endings
+
+$morph$ = $lex$ "<inflection.a>"
+
+% Eliminate incorrect combinations with a filter transducer
+
+$=C$ = [#infl#]:<>
+$inflection-filter$ = $Letter$+ $=C$ $=C$ $sym$*
+
+$morph$ = $morph$ || $inflection-filter$
+
+$morph$ || "<phon.a>"
+\end{verbatim}
+
+
+\begin{exercise}
+  Store the above code in the files \texttt{symbols.fst},
+  \texttt{inflection.fst}, \texttt{phon.fst}, and \texttt{morph.fst},
+  respectively. Create a lexicon file \texttt{morph.lex} with entries
+  as shown before. Use \texttt{fst-compiler} to create
+  \texttt{inflection.a}, \texttt{phon.a}, and \texttt{morph.a}. Start
+  \texttt{fst-mor morph.a} and try to analyze different word forms.
+\end{exercise}
+
+The Unix utility \texttt{make} can be used to determine automatically
+which transducers need to be recompiled. \texttt{make} needs a control
+file which looks as follows:
+
+\begin{verbatim}
+morph.a: symbols.fst inflection.a phon.a morph.lex
+
+phon.a: symbols.fst
+
+%.a: %.fst
+        fst-compiler $< $@
+\end{verbatim}
+
+The first command tells \texttt{make} that the file \texttt{morph.a}
+depends on the files \texttt{symbols.fst}, \texttt{inflection.a},
+\texttt{morph.lex}, and \texttt{phon.a}. Whenever one of these files
+changes, \texttt{morph.a} needs to be recompiled. The second command
+adds the dependency of \texttt{phon.a} on \texttt{symbols.fst}. The
+third command consists of two lines and informs the \texttt{make}
+program that a file such as \texttt{foo.a} is produced from a
+corresponding file \texttt{foo.fst} by calling \texttt{fst-compiler
+  foo.fst foo.a}. 
+
+The new version of the morphology no longer covers derived word forms
+and compounds. This functionality will be added in the next section.
+
+\begin{exercise}
+  Store the above control data in a file called \texttt{makefile} and
+  call \texttt{make}. If all the files are up to date, nothing is
+  done. Otherwise, \texttt{make} calls \texttt{fst-compiler} to update
+  the compiled transducer files.
+\end{exercise}
+
+
+\subsection{Compounding Revisited}
+
+German is a language which is well-known for the complexity of its
+compounds. A moderate example is the word
+\emph{Bundesausbildungsf"orderungsgesetz} (federal education
+advancement law). English is less productive in this respect.
+Nevertheless, the compounding mechanism that we will implement next is
+able to produce English compounds of similar complexity.
+
+The compounds are generated by the following code which is stored in
+the file \texttt{compounding.fst}. The second command reads the
+lexicon, deletes the inflection labels in the surface layer, and
+replaces the inflection labels in the analysis layer with
+part-of-speech symbols. The following command extracts nouns and
+adjectives from the lexicon stored in \texttt{$lex$}. Compounds are
+created by concatenating one or more compounding stems
+(\texttt{\$T1\$+}) and a noun or adjective entry (\texttt{\$T2\$}).
+The compounds are then added to the other lexicon entries.
+
+The compounding code is included in \texttt{morph.fst} via an include
+command, as shown below.
+
+\begin{verbatim}
+%%%%%%%%%%%% compounding.fst %%%%%%%%%%%%%%%
+
+% generate compounding stems
+
+$T$ = <Adj>:<A-reg> | <Noun>:<N-reg> | <Verb>:[<V-reg><V-dup><V-pres-ger2>]
+$T1$ = ($Letter$* $T$) || "morph.lex" || ($Letter$* [#infl#]:<>)
+
+% extract adjective and noun entries
+
+$T2$ = $lex$ || ($Letter$+ [<A-reg><N-reg>])
+
+% produce the compounds
+
+$comp$ = $T1$+ $T2$
+
+% add the compounds to the lexicon
+
+$lex$ = $lex$ | $comp$
+
+
+%%%%%%%%%%%%%%% morph.fst %%%%%%%%%%%%%%%%%%
+...
+$lex$ = ($Letter$* <>:[#infl#]) || "morph.lex"
+#include "compounding.fst"
+...
+\end{verbatim}
+
+\begin{exercise}
+  Extend the \texttt{makefile} such that \texttt{morph.a} is
+  recompiled when \texttt{compounding.fst} is modified. Compile the
+  morphology and try to analyze different compounds.
+\end{exercise}
+
+
+\subsection{Derivation Revisited}
+
+Many Germanic languages possess two different derivational mechanisms.
+The \emph{native} derivation of word forms is exemplified by the
+English noun \emph{darkness} which is obtained by adding the suffix
+\emph{-ness} to the adjective \emph{dark}.  Similarly, the
+\emph{neo-classical} nominalization \emph{reality} is composed of the
+adjective \emph{real} and the suffix \emph{-ity}. Neo-classical word
+formation is mostly used with loan words of Latin origin.
+
+We have to make sure that our morphology only combines neo-classical
+affixes with neo-classical stems and native affixes with native stems.
+Thus, neither \emph{darkity} nor \emph{realness} should be generated.
+
+We add special entries for derivation stems and derivation suffixes as
+shown below.  Derivation stems are annotated with their part of speech
+and origin. Lexicon entries for derivation suffixes start with the
+part of speech and the origin feature of the derivation stem that they
+combine with, and they end with the label of the inflectional class of the
+resulting word form.
+
+\begin{verbatim}
+...
+dark<Adj><native>
+real<Adj><classic>
+<Adj><native>ness<N-reg>
+<Adj><classic>ity<N-reg>
+\end{verbatim}
+
+The morphology program is extended with the new source code file
+\texttt{derivation.fst} which is included in the main file
+\texttt{morph.fst} as shown below.
+
+\begin{verbatim}
+%%%%%%%%%%%%% derivation.fst %%%%%%%%%%%%%%%
+
+% extract derivation stems and suffixes
+
+$derivstems$ = $Letter$+ $pos$ <>:[#origin#] || "morph.lex"
+$suffixes$ = <>:[#pos#]<>:[#origin#] $Letter$+ <>:[#infl#] || "morph.lex"
+
+$suffixes$ = <Suff>:<> $suffixes$
+
+% concatenate derivation stems and suffixes and
+
+$deriv$ = $derivstems$ $suffixes$
+
+% filter out incorrect combinations
+
+$=pos$ = [#pos#]:<>
+$=origin$ = [#origin#]:<>
+$filter$ = $sym$* $=pos$ $=origin$ $=pos$ $=origin$ $sym$* $infl$
+
+$deriv$ = $deriv$ || $filter$
+
+% add the derived stems to the lexicon
+
+$lex$ = $lex$ | $deriv$
+
+%%%%%%%%%%%%%%% morph.fst %%%%%%%%%%%%%%%%%%
+...
+#include "derivation.fst"
+#include "compounding.fst"
+...
+\end{verbatim}
+
+
+\begin{exercise}
+  Extend the morphology such that the word \emph{reachability}
+  receives the analysis:
+  
+  \texttt{reach<Verb><Suff>abel<Adj><Suff>ity<Noun><sg>}
+  
+  The lexicon entry for the first derivational suffix might look as
+  follows:
+
+  \texttt{<V><native>ab<>:ile:<><Adj><classic>}
+\end{exercise}
+
+\end{document}
+
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:

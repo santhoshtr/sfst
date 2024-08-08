@@ -1,0 +1,985 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%      File: SFST-Manual.tex                                  %%%
+%%%    Author: Helmut Schmid                                    %%%
+%%%   Purpose: SFST Manual                                      %%%
+%%%   Created: Thu Feb 21 10:44:45 2002                         %%%
+%%%  Modified: Thu Aug  8 09:36:54 2024 (schmid)                %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass{article}
+
+\usepackage{natbib}
+
+\addtolength{\oddsidemargin}{-1cm}
+\addtolength{\textwidth}{2cm}
+\addtolength{\topmargin}{-1cm}
+\addtolength{\textheight}{2cm}
+
+\title{SFST Manual}
+\author{Helmut Schmid\\\\schmid@cis.lmu.de\\
+  Center for Information and Language Processing\\
+  Ludwig-Maximilians-Universit{\"a}t\\Munich, Germany}
+\date{}
+
+\parskip=\medskipamount
+\parindent=0mm
+
+\begin{document}
+\maketitle
+
+
+\section{Introduction}
+
+The Stuttgart Finite State Transducer (SFST) tools are a collection of
+software tools for the generation, manipulation and processing of
+finite-state automata and transducers. A finite state transducer (FST)
+maps strings from one regular language (surface language) onto strings
+from another regular language (analysis language). One important
+application of FSTs is morphological analysis, where a word form such
+as \emph{translations} might be mapped to the analysis string
+\emph{translate$<$V$>$ion$<$N$>$$<$pl$>$}. The mapping between surface
+strings and analysis strings is reversible. The same transducer can be
+used to generate (i) analyses for a surface form (in analysis mode)
+and (ii) to generate surface forms for an analysis (in generation
+mode). The number of generated output strings is non necessarily 1,
+but can be anywhere between 0 and infinite.
+
+Other important applications of FSTs are lemmatization, tokenization,
+lexicon representation, spell checking, grapheme to phoneme
+conversion, low-level parsing, and much more.
+
+The SFST tools comprise
+\begin{itemize}
+\item a programming language for the implementation of finite state
+  transducers called ``SFST-PL''
+\item a compiler for SFST programs called fst-compiler
+\item a set of tools for applying, printing, and comparing finite
+  state transducers and
+\item a finite state transducer library written in C++
+\end{itemize}
+
+The implementation of the compiler and the other tools is based on the
+C++ library. The following description of the SFST tools assumes some
+familiarity with finite state transducers.
+
+\section{The SFST Programming Language}
+
+SFST transducers are specified by means of the SFST programming
+language. Any regular expression is already a valid SFST program. An
+example is the expression:
+\begin{verbatim}
+  Hello\ world\!
+\end{verbatim}
+It defines a transducer which maps the string \emph{Hello world!} onto
+itself and rejects any other input. The blank and the exclamation
+mark have to be quoted with a backslash because unquoted blank and tab
+characters are ignored and unquoted exclamation marks are interpreted
+as negation operators.
+
+Because the output of the previous transducer is always identical to
+its input, it is equivalent to a finite state automaton. The following
+expression specifies a real transducer which (in generation mode) maps
+a string of a's, b's, and c's to a string where the c's are unchanged
+and the a's have been replaced with b's and vice versa. The string
+\emph{abcba}, for instance, would be mapped to \emph{bacab}.
+\begin{verbatim}
+  (a:b | b:a | c:c)*
+\end{verbatim}
+This expression uses the union operator ($|$) and Kleene's star
+operator (*). The colon operator separates an input symbol and an
+output symbol. \emph{a:b} maps the input symbol \emph{a} to \emph{b}
+in generation mode and \emph{b} to \emph{a} in analysis mode. The
+expression \verb#c:c# could have been abbreviated to \verb#c#.
+
+Note that the analysis level is viewed as the lower level and the
+surface level as the upper level in SFST. (Other formalism sometimes
+visualize the surface as the lower level.)
+
+A less trivial mapping is performed by the following transducer for
+the inflection of the nouns \emph{foot}, \emph{house}, and
+\emph{mouse}:
+\begin{verbatim}
+  (house | foot | mouse) <N>:<> <sg>:<> |\
+  (house<>:s | f o:e o:e t | {mouse}:{mice}) <N>:<> <pl>:<>
+\end{verbatim}
+
+Strings which are enclosed in angle brackets (such as \verb#<N>#,
+\verb#<sg>#, and \verb#<pl># in the previous example) are
+multi-character symbols. They are treated in the same way as
+single-character symbols. '\verb#<>#' is a special symbol representing
+the empty string. The expression '\verb#house<>:s#' therefore maps
+\emph{house} to \emph{houses} (in generation mode). '\verb#fo:eo:et#'
+specifies a transducer which maps \emph{foot} to \emph{feet}. The
+expression \verb#{mouse}:{mice}# is equivalent to
+\verb#m:mo:iu:cs:ee:<># and maps \emph{mouse} to \emph{mice}.
+
+Regular expressions terminate at the end of a line unless the end of
+the line is quoted with a backslash. This was the reason for adding a
+backslash at the end of the first line in the previous example.
+
+\subsection*{Variables}
+
+An SFST program is essentially a regular expression. This expression
+may be quite complex for transducers which perform sophisticated
+tasks. Therefore we use variables to build complex expressions from
+smaller units. The preceding program, for instance, can be
+reformulated as follows:
+
+\begin{verbatim}
+  $Nsg$ = house | foot | mouse
+  $Npl$ = house<>:s | f o:e o:e t | {mouse}:{mice}
+  $Nsg$ <N>:<> <sg>:<> | $Npl$ <N>:<> <pl>:<>
+\end{verbatim}
+
+The first two lines define the variables \verb#$Nsg$# and
+\verb#$Npl$#. Variable names begin and end with a dollar sign. The
+right-hand side of a variable definition is any valid regular
+expression (see the next section).
+
+There is a second type of variables for character ranges. They start
+and end with the symbol `\#'. The following program defines a variable
+for lower-case characters, a variable for upper-case characters and a
+transducer which maps strings of lower-case characters to the
+corresponding strings of upper-case characters (in generation mode).
+\begin{verbatim}
+  #LC# = a-z
+  #UC# = A-Z
+  [#LC#]:[#UC#]*
+\end{verbatim}
+
+SFST programs usually consist of a long sequence of variable
+definitions followed by a single expression which specifies the
+result transducer.
+
+
+\subsection*{Agreement Variables}
+
+Variables whose name starts with the symbol ``='' are called
+\emph{agreement variables}. They are treated specially by the
+compiler: if an expression contains several instances of the same
+agreement variable, their values are correlated. Consider the
+following example program:
+\begin{verbatim}
+    $=c$ = [abc]
+    $=c$ X $=c$
+\end{verbatim}
+The result transducer for this program maps the strings aXa, bXb, and
+cXc onto themselves. Only acyclic transducers (i.e.\ transducers with
+a finite set of strings mappings) can be assigned to agreement
+variables. 
+
+There are also agreement variables for character ranges. The following
+transducer maps aX to aXa, bX to bXb, and cX to cXc (in generation mode).
+\begin{verbatim}
+    #=c# = abc
+    [#=c#] X <>:[#=c#]
+\end{verbatim}
+
+
+\subsection*{Basic Regular Expressions}
+
+The transducer expressions are defined over a set of \textbf{symbol
+  pairs}. Symbols are specified in one of the following ways:
+
+\begin{itemize}
+\item single characters such as \texttt{`A'} or \texttt{`{\'a}'}
+\item quoted characters such as '\verb#\ #' or '\verb#\!#'
+\item quoted numbers such as '\verb#\32#' which are translated to the character
+  with the respective code ('\verb#\32#' translates to the blank
+  character.)
+\item multi-character symbols such as \verb#<N># or \verb#<k$ln_5># which
+  are enclosed in angle brackets and which contain only ASCII characters
+\item the special symbol \verb#<># which designates the empty string
+\end{itemize}
+
+\noindent
+The following expressions are examples of \textbf{basic regular
+  expressions}:\\
+
+\parbox[t]{2cm}{\textbf{a:b}}
+\begin{minipage}[t]{11cm}
+  defines a transducer which maps the symbol \textbf{a} to the
+  symbol \textbf{b}.\\
+\end{minipage}
+
+\parbox[t]{2cm}{\textbf{a}}
+\begin{minipage}[t]{12cm}
+  is identical to \textbf{a:a}\\
+\end{minipage}
+
+\parbox[t]{2cm}{\textbf{a:.}}
+\begin{minipage}[t]{12cm}
+  maps the symbol \textbf{a} to any symbol \emph{b} for which the
+  symbol pair \emph{a:b} is an element of the alphabet.
+  (The alphabet is described below.)\\
+\end{minipage}
+
+\parbox[t]{2cm}{\textbf{.}}
+\begin{minipage}[t]{12cm}
+  is identical to \textbf{.:.}. The transducer defined by this
+  expression performs any mapping of a single symbol allowed by the
+  alphabet.\\
+\end{minipage}
+
+\parbox[t]{2cm}{\textbf{[abc]:[de]}}
+\begin{minipage}[t]{12cm}
+  is identical to \textbf{a:d $|$ b:e $|$ c:e} (``$|$'' is the or-operator
+  which is introduced below.)\\
+  \end{minipage}
+
+\parbox[t]{2cm}{\textbf{[a-d]:[A-C]}}
+\begin{minipage}[t]{12cm}
+  is identical to \textbf{[abcd]:[ABC]}.\\
+\end{minipage}
+  
+\parbox[t]{2cm}{\textbf{[abc]}}
+\begin{minipage}[t]{12cm}
+  is a short form of \textbf{[abc]:[abc]}.\\
+\end{minipage}
+  
+\parbox[t]{2cm}{\textbf{[$\hat{~}$abc]}}
+\begin{minipage}[t]{12cm}
+  maps any symbol other than a, b, or c onto itself. I.e. [$\hat{~}$abc] is
+  the complement of [abc] with respect to the alphabet.\\
+\end{minipage}
+  
+\parbox[t]{2cm}{\textbf{\{abc\}:\{de\}}}
+\begin{minipage}[t]{12cm}
+  is identical to \textbf{a:d b:e c:}\verb#<># This expression maps
+  \textbf{abc} to \textbf{de}.\\
+\end{minipage}
+
+\parbox[t]{2cm}{\textbf{\$var\$}}
+\begin{minipage}[t]{12cm}
+  the value of a variable \verb#$var$# is the expression which was
+  previously assigned to it (see below).
+\end{minipage}\\
+
+
+
+\subsection*{Operators}
+
+More complex expressions are built by combining transducer expressions
+with operators. SFST-PL supports the following set of operators:\\
+
+\parbox[t]{1cm}{\textbf{rs}}
+\begin{minipage}[t]{13cm}
+  concatenation\\  
+  If \textbf{r} maps the string $\alpha$ to $\beta$ and \textbf{s}
+  maps $\gamma$ to $\delta$, then \textbf{rs} maps the string
+  $\alpha\gamma$ to $\beta\delta$.\\
+\end{minipage}
+  
+\parbox[t]{1cm}{\textbf{r$|$s}}
+\begin{minipage}[t]{13cm}
+  or-operator (union, disjunction) \\
+  \textbf{r$|$s} maps $\alpha$ to $\beta$ iff \textbf{r} or
+  \textbf{s} maps $\alpha$ to $\beta$.\\
+\end{minipage}
+  
+\parbox[t]{1cm}{\textbf{r$||$s}}
+\begin{minipage}[t]{13cm} 
+  composition\\
+  \textbf{r$||$s} maps $\alpha$ to $\gamma$ iff \textbf{r} maps $\alpha$
+  to some $\beta$ and \textbf{s} maps $\beta$ to $\gamma$.\\
+\end{minipage}
+  
+\parbox[t]{1cm}{\textbf{r\&s}}
+\begin{minipage}[t]{13cm}
+  and-operator (intersection, conjunction)\\
+  \textbf{r\&s} maps the string $a_1a_2...a_n$ to $b_1b_2...b_n$ iff
+  both \textbf{r} and \textbf{s} map $a_1a_2...a_n$ to $b_1b_2...b_n$
+  by aligning $a_i$ with $b_i$ for all $1\le i \le n$. $a_i$ and $b_i$
+  are either a single character, a single multi character symbol
+  or the empty symbol \verb#<>#.\\
+  Note: Although \textbf{a:b} and \textbf{a:}\verb#<><>#\textbf{:b}
+  both map the string \textbf{a} to \textbf{b}, the result of
+  \textbf{a:b \& (a:}\verb#<>#\verb#<>#\textbf{:b)} is
+  nevertheless empty because the alignment is different.\\
+\end{minipage}
+  
+\parbox[t]{1cm}{\textbf{!r}}
+\begin{minipage}[t]{13cm}
+  Negation (complement)\\
+  \textbf{!r} maps the string $a_1a_2...a_n$ to $b_1b_2...b_n$ iff the
+  alphabet contains $a_i$:$b_i$ for all $1\le i\le n$, and $r \&
+  (a_1$:$b_1a_2$:$b_2...a_n$:$b_n$) is the empty transducer.  Either
+  $a_i$ or $b_i$ is allowed to be the empty symbol.\\
+\end{minipage}
+
+\parbox[t]{1cm}{\textbf{r--l}}
+\begin{minipage}[t]{13cm}
+  minus (subtraction, difference, relative complement)\\
+  \verb#l-r# is equivalent to \verb#l & !r#.\\
+\end{minipage}
+
+\parbox[t]{1cm}{\textbf{r?}}
+\begin{minipage}[t]{13cm}
+  optionality\\
+  identical to \verb#<>#\textbf{$|$r}\\
+\end{minipage}
+
+\parbox[t]{1cm}{\textbf{r*}}
+\begin{minipage}[t]{13cm}
+  Kleene's star operator\\
+  if \textbf{r} maps $\alpha$ to $\beta$, then \textbf{r*} maps $n$
+  repetitions of $\alpha$ to $n$ repetitions of $\beta$
+  for $n=0,1,2,...$.\\
+\end{minipage}
+
+\parbox[t]{1cm}{\textbf{r+}}
+\begin{minipage}[t]{13cm}
+  Kleene's plus\\
+  identical to \textbf{r r*}\\
+\end{minipage}
+  
+\parbox[t]{1cm}{\textbf{\symbol{94}r}}
+\begin{minipage}[t]{13cm}
+  range (extraction of the surface language)\\
+  maps $\beta$ to $\beta$ iff \textbf{r} maps some string $\alpha$ to
+  $\beta$.\\
+  \textbf{Note}: SFST considers the surface language as the upper
+  language and the analysis language as the lower language!
+\end{minipage}
+
+\parbox[t]{1cm}{\textbf{\_r}}
+\begin{minipage}[t]{13cm}
+  domain (extraction of the analysis/deep language)\\
+  maps $\alpha$ to $\alpha$ iff \textbf{r} maps $\alpha$ to some
+  string $\beta$.\\
+\end{minipage}
+
+\parbox[t]{1cm}{\textbf{\symbol{94}\_r}}
+\begin{minipage}[t]{13cm}
+  inversion\\
+  maps $\alpha$ to $\beta$ iff \textbf{r} maps $\beta$ to $\alpha$.\\
+\end{minipage}
+
+\parbox[t]{1cm}{\textbf{r{\small $<<$}x}}
+\begin{minipage}[t]{13cm}
+  insertion\\
+  freely inserts the symbol pair \textbf{x} into the transducer
+  \textbf{r}. The expression \verb#ab << <x>#, for instance, is
+  equivalent to \verb#<x>*a<x>*b<x>*#.\\
+\end{minipage}
+
+\noindent
+
+SFST supports two-level rules. However, the syntax differs slightly
+from that in \cite{Koskenniemi:83} and multiple contexts are
+not supported.\\
+
+\parbox[t]{2.5cm}{\textbf{l a $<=$ b r}}
+\begin{minipage}[t]{11.5cm}
+  obligatorily maps the symbol \textbf{a} to \textbf{b} if \textbf{l}
+  precedes and \textbf{r} follows. (Elsewhere, the mapping of
+  \textbf{a} to \textbf{b} is optional. \textbf{l} and \textbf{r} are
+  arbitrary regular expressions.)
+  
+  This expression is identical to \textbf{!(.* l (a:. \& !a:b) r
+    .*)}\\
+  Note that the alphabet must contain the pair a:b here.
+\end{minipage}
+  
+\parbox[t]{2.5cm}{\textbf{l a $=>$ b r}}
+\begin{minipage}[t]{11.5cm}
+  allows the mapping of symbol \textbf{a} to \textbf{b} only if
+  \textbf{l} precedes and \textbf{r} follows. (The mapping of
+  \textbf{a} to \textbf{b} is optional in this context.)
+  
+  The expression is equivalent to \textbf{!(!(.* l) a:b .* $|$ .* a:b
+    !(r .*))}\\
+\end{minipage}
+  
+\parbox[t]{2.5cm}{\textbf{l a $<=>$ b r}}
+\begin{minipage}[t]{11.5cm}
+  maps the symbol \textbf{a} to \textbf{b} if and only if \textbf{l}
+  precedes and \textbf{r} follows.
+
+  The expression is identical to \textbf{(l a $=>$ b r) \& (l a $<=$ b r)}\\
+\end{minipage}
+
+The single characters \texttt{a} and \texttt{b} in a two-level rule
+may be replaced by character ranges such as
+\textbf{[a-z{\"a}{\"o}{\"u}]}. The left and right context of a
+two-level rule should be surrounded by parentheses in order to ensure
+correct interpretation by the compiler.
+
+The SFST formalism comprises replace operators similar to those
+described in \cite{Karttunen95}. (Note the two underscores between the
+left and right context!)
+
+\parbox[t]{2.5cm}{\textbf{c \symbol{94}--$>$ l\_\_r}}
+\begin{minipage}[t]{11.5cm}
+  upward replacement\\
+  Each substring \textbf{s} of the input string which is in the
+  analysis/deep language of the transducer \textbf{c} and whose left
+  context is matched by the expression \textbf{.*l} and whose right
+  context is matched by \textbf{r.*} is mapped to the respective
+  surface strings defined by transducer \textbf{c}. Any other
+  character is mapped to the characters specified in the alphabet. The
+  left and right contexts must be automata (i.e.\ transducers which
+  map strings onto themselves).\\
+  The rule \verb#{aa}:{bb} ^-> c__c#, for instance, maps
+  the string \textbf{caacac} to \textbf{cbbcac} in generation mode.\\
+  Note that the alphabet must contain the characters \emph{a} and
+  \textbf{b}, but not the pair \emph{a:b} (unless you want wo allow
+  this replacement everywhere in the context).
+\end{minipage}
+
+\parbox[t]{2.5cm}{\textbf{c \_--$>$ l\_\_r}}
+\begin{minipage}[t]{11.5cm}
+  downward replacement\\
+  Each substring \textbf{s} of the input string which is in the
+  surface language of \textbf{c} and whose left context is matched by
+  the expression \textbf{.*l} and whose right context is matched by
+  \textbf{r.*} is mapped to the respective analysis strings defined by
+  \textbf{c}. 
+\end{minipage}
+
+\parbox[t]{2.5cm}{\textbf{c /--$>$ l\_\_r}}
+\begin{minipage}[t]{11.5cm}
+  rightward replacement\\
+  The left context \textbf{l} must match the left surface context and
+  the right context \textbf{r} must match the right analysis context.
+\end{minipage}
+
+\parbox[t]{2.5cm}{\textbf{c $\backslash$--$>$ l\_\_r}}
+\begin{minipage}[t]{11.5cm}
+  leftward replacement\\
+  The left context \textbf{l} must match the left analysis context and
+  the right context \textbf{r} must match the right surface context.
+\end{minipage}\\
+
+If a replace operator is followed by a question mark (?), the
+replacement becomes optional. Note that replace operations (unlike the
+two-level rules) can only be combined by composition and not by
+intersection!
+
+Furthermore, the SFST tools support some of the restriction and
+coercion operators defined in \cite{Yli-Jyrae:04}. These operators can
+also be used with multiple contexts which are separated by commas.
+
+\parbox[t]{2.7cm}{\textbf{c $=>$ l\_\_r}}
+\begin{minipage}[t]{11.3cm}
+  restriction operator\\
+  This operator allows any (substring) mapping defined by the
+  transducer $c$ only if it occurs in the context $l$ and $r$. Symbols
+  outside of the matching substrings are mapped to any symbol allowed
+  by the alphabet.
+\end{minipage}
+  
+\parbox[t]{2.7cm}{\textbf{c $<=$ l\_\_r}}
+\begin{minipage}[t]{11.3cm}
+  coercion operator\\
+  This operator requires that one of the mappings defined by the
+  transducer $c$ must occur in each context $l$ and $r$.
+\end{minipage}
+  
+\parbox[t]{2.7cm}{\textbf{c $<=>$ l\_\_r}}
+\begin{minipage}[t]{11.3cm}
+  restriction and coercion\\
+  This operator is equivalent to the intersection
+  \verb#c => l__r & c <= l__r# and requires that
+  the mappings defined by $c$ occur always and only in the given
+  contexts.
+\end{minipage}
+  
+
+\parbox[t]{2.7cm}{\textbf{c \symbol{94}$=>$ l\_\_r}}
+\begin{minipage}[t]{11.3cm}
+  surface restriction operator\\
+  This operator specifies that a string from the analysis language of
+  the transducer $c$ may only be mapped to one of its surface strings
+  (according to transducer $c$) if it appears in the context $l$ and
+  $r$.
+\end{minipage}
+  
+\parbox[t]{2.7cm}{\textbf{c \symbol{94}$<=$ l\_\_r}}
+\begin{minipage}[t]{11.3cm}
+  surface coercion operator\\
+  This operator specifies that a string from the source language of
+  the transducer $c$ always has to the mapped to one of its target
+  strings according to transducer $c$ if it appears in some context
+  $l$ and $r$.
+\end{minipage}
+  
+\parbox[t]{2.7cm}{\textbf{c \symbol{94}$<=>$ l\_\_r}}
+\begin{minipage}[t]{11.3cm}
+  surface restriction and coercion\\
+  equivalent to the intersection
+  \verb#c ^=> l__r & c ^<= l__r#.
+\end{minipage}
+  
+
+\parbox[t]{2.7cm}{\textbf{c \_$=>$ l\_\_r}}
+\begin{minipage}[t]{11.3cm}
+  deep restriction operator\\
+  This operator specifies that a string from the target language of
+  the transducer $c$ may only be mapped (in analysis direction) to one
+  of its source strings (according to transducer $c$) if it appears in
+  the context $l$ and $r$.
+\end{minipage}
+  
+\parbox[t]{2.7cm}{\textbf{c \_$<=$ l\_\_r}}
+\begin{minipage}[t]{11.3cm}
+  deep coercion operator\\
+  This operator specifies that a string from the target language of
+  the transducer $c$ always has to the mapped to one of its source
+  strings according to transducer $c$ if it appears in the context
+  $l$ and $r$.
+\end{minipage}
+  
+\parbox[t]{2.7cm}{\textbf{c \_$<=>$ l\_\_r}}
+\begin{minipage}[t]{11.3cm}
+  deep restriction and coercion\\
+  equivalent to the intersection \verb#c \_=> l__r & c \_<= l__r#.
+\end{minipage}\\
+  
+
+\noindent
+Finally, there are two commands which create transducers from files
+and one command which writes intermediate transducers to a file.
+
+\parbox[t]{2cm}{\textbf{''file''}}
+\begin{minipage}[t]{10cm}
+  lexicon reader\\
+  reads a text file named \emph{file} and returns the union of
+  the lines of the file (see below). Whitespace at the end of the line
+  is ignored unless it is quoted.
+\end{minipage}
+
+\parbox[t]{2cm}{\textbf{''$<$file$>$''}}
+\begin{minipage}[t]{10cm}
+  transducer reader\\
+  reads a precompiled transducer from a binary file named \emph{file}
+  and returns it (see below).
+\end{minipage}
+
+\parbox[t]{2cm}{\textbf{t $>>$ ''file''}}
+\begin{minipage}[t]{10cm}
+  output operator\\
+  writes the transducer ``t'' to the file named \emph{file}. \emph{t}
+  is any valid transducer expression.
+\end{minipage}
+
+\textbf{Caveat:} The file names should only contain ASCII characters!
+
+\subsection*{The Alphabet}
+
+The alphabet contains a set of symbol pairs which is required for the
+interpretation of the wildcard symbol '.'. The following SFST program
+e.g.\ defines a transducer which maps a sequence of letters to the
+same sequence of letters, but with lower-case letters replaced by
+upper-case characters (in generation mode):
+
+\begin{verbatim}
+  ALPHABET = [A-Z] [a-z]:[A-Z]
+  .*
+\end{verbatim}
+
+The first line defines the alphabet. The right-hand side of this
+assignment is a transducer expression. The set of symbol pairs is
+obtained by (i) compiling the expression to a transducer and (ii)
+extracting the symbol pairs from all state transitions of the
+transducer.
+
+The definition of an alphabet is also required by the negation
+operator, the two-level rules, and Yli-Jyr{\"a}'s coercion and
+restriction operators.
+
+
+\subsection*{Comments}
+
+Comments in SFST programs start with a percent character (\verb#%#) and
+extend up to the end of the line. The following lines of code return
+the expression \verb#abc#.
+
+\begin{verbatim}
+  % This is a comment
+  abc % This is another comment
+  % This comment also extends up to the end of the line % cde 
+\end{verbatim}
+
+
+\subsection*{Lexica}
+
+The lexicon entries of morphological analyzers are usually stored in a
+separate file, one entry per line. SFST-PL provides the operator
+\verb#"lexicon"# to read lexicon entries from a file called
+\emph{lexicon}. The result of the operator is a union of all the
+lines from the file. If the file \emph{lexicon} contains the following
+entries
+\begin{verbatim}
+  house
+  mouse
+  foot
+\end{verbatim}
+then the result of the operator \verb#"lexicon"# is the expression
+\verb#house|mouse|foot#. The file reader treats all characters
+literally except for :, $\backslash$, and angle brackets which are
+part of a multi-character symbol. Blanks and tab characters are
+deleted at the end of a lexicon line because such whitespace is
+usually added unintentionally.
+
+
+\subsection*{Include Command}
+
+Complex computer programs are usually stored in a set of files rather
+than a single file, and the compiler combines these files to a single
+program. The same can be done with SFST programs. The command
+\verb@#include "file.fst"@ instructs the compiler to insert the
+contents of the file \emph{file.fst} at the current position.
+
+SFST programs create complex transducers by combining simpler
+transducers. If the compilation of some component transducer is
+expensive and the respective source code is seldom modified, it is
+useful to \emph{pre-compile} this transducer. To this end, a separate
+SFST program has to be written which implements the component
+transducer. This program is compiled and the resulting transducer is
+stored e.g.\ in a file named \emph{inc.a}. The main program reads the
+precompiled transducer with the command \verb#"<inc.a>"#.
+
+
+\subsection*{A Simple Example}
+
+The following very simple example shows the implementation of an
+inflectional component for English adjectives such as \emph{easy},
+\emph{late}, or \emph{dark}. It will correctly analyze forms such as
+\emph{easier}, \emph{latest}, or \emph{darkest} and produce the
+analyses \verb#easy<ADJ><comp>#, \verb#late<ADJ><sup>#, and
+\verb#dark<ADJ><sup>#.
+
+\begin{verbatim}
+% Define the set of valid symbol pairs for the two-level rules.
+% The symbol # is used to mark the boundary between the stem and
+% the inflectional suffix. It is deleted here.
+ALPHABET = [A-Za-z] y:i [e\#]:<> 
+
+% Read the lexical items from a separate file
+% each line of which contains a form like "dark"
+$WORDS$ = "adj"
+
+% Define a rule which replaces y with i 
+% if a morpheme boundary and an e follows
+% easy#er -> easier
+$R1$ = y<=>i (\#:<> e)
+
+% Define a rule which eliminates e before "#e"
+% late#er -> later
+$R2$ = e<=><> (\#:<> e)
+
+% Compute the intersection of the two rule transducers
+$R$ = $R1$ & $R2$
+
+% Define a transducer for the inflectional endings
+$INFL$ = <ADJ>:<> (<pos>:<> | <comp>:{er} | <sup>:{est})
+
+% Concatenate the lexical forms and the inflectional endings and
+% put a morpheme boundary in between which is not printed in the analysis
+$S$ = $WORDS$ <>:\# $INFL$
+
+% Apply the two level rules
+% The result transducer is stored in the output file
+$S$ || $R$
+\end{verbatim}
+
+
+
+\section{Compilation}
+
+The SFST compiler translates the SFST source code to a
+minimized\footnote{The minimization will not change the alignment
+  between surface and analysis symbols. Therefore smaller transducers
+  with different alignments may exist.} transducer which is stored in
+the output file. The compiler is quite efficient and was successfully
+used to compile SMOR, a large German computational morphology.
+
+The SFST tools support three different transducer formats which are
+optimized for flexibility, processing speed and start-up time/memory
+efficiency, respectively. The implementation of the SFST tools is
+based on a C++ class library which facilitates the development of new
+analysis tools. 
+
+
+\section{Unicode}
+
+SFST supports UTF8 encoding or characters. In order to compile an SFST
+program with UTF8 encoding, you have to use the
+\emph{fst-compiler-utf8} rather than the \emph{fst-compiler} program.
+Both compilers store the type of encoding (8-Bit ASCII extension vs.
+UTF8) in the transducer file. Other programs such as fst-infl or
+fst-mor are therefore able to determine the appropriate character
+encoding.
+
+
+\section{Usage of the SFST Programs}
+
+The command \texttt{fst-compiler ex.fst ex.a} compiles the program
+stored in the file \emph{ex.fst} into a transducer which is written to
+the file \texttt{ex.a}.
+
+The command \texttt{fst-mor ex.a} reads the transducer from the file
+and prompts the user to enter words. Entering an empty line will
+switch fst-mor into generation mode. Entering another empty line will
+turn on the analysis mode, again. Entering \texttt{q} terminates the
+session.  Here is a sample session:
+\begin{verbatim}
+> fst-compiler ex.fst ex.a
+> fst-mor ex.a
+reading transducer...
+finished.
+analyze> easy
+easy<ADJ><pos>
+analyze> easier
+easy<ADJ><comp>
+analyze> easiest
+easy<ADJ><sup>
+analyze>
+generate> easy<ADJ><sup>
+easiest
+generate> q
+\end{verbatim}
+\texttt{fst-infl} is a similar tool for batch mode analysis. It is
+used in one of the following ways:
+\begin{verbatim}
+> fst-infl ex.a file
+> echo easiest | fst-infl ex.a
+\end{verbatim}
+\texttt{fst-infl} has no generation mode. In order to use
+\texttt{fst-infl} for generation, you should compile the transducer
+using the option \texttt{-s} which tells the compiler to switch the
+surface and analysis symbols of the resulting transducer.
+\texttt{fst-infl} processes the input by converting each line into an
+automaton, composing the transducer with this automaton, extracting
+the domain of the resulting transducer and printing all strings
+generated by this automaton.
+
+\texttt{fst-infl2} has the same functionality as \texttt{fst-infl},
+but uses a more compact binary transducer format and a different
+analysis algorithm (traversal of the transducer with backtracking)
+which is more efficient if the degree of ambiguity is low. Use the
+compiler option \texttt{-c} or the separate program called
+\emph{fst-compact} in order to generate the compact transducer format
+required by \texttt{fst-infl2}.
+
+\texttt{fst-infl3} is the third member of the fst-infl family which
+supports the ``lowmem'' transducer format generated either by the
+compiler switch \emph{-l} or by the separate conversion program
+\emph{fst-lowmem}. fst-infl3 avoids reading the transducer into memory
+by directly accessing it on disc. This program start very quickly but
+processing is slower than with the other programs.
+
+If you need information about the available options of one of the
+tools, just call it with the option \texttt{-h} or have a look at the
+man pages. 
+
+
+\subsection{Other Tools}
+
+The command \texttt{fst-print} prints transducers in text form.
+\texttt{fst-compare} checks whether two transducers are equivalent.
+\texttt{fst-generate} enumerates the set of mappings of analysis to
+surface forms for the argument transducer.
+
+\texttt{fst-match} is similar to \texttt{fst-infl2} but treats the
+input as a sequence of words that are to be analyzed, rather than a
+single word. \texttt{fst-match} repeatedly determines the longest
+prefix of the input which can be analyzed by the transducer, returns
+the respective analysis\footnote{If there is more than one mapping for
+  the longest match, only one of them is printed.} and continues
+processing after the match.
+
+\texttt{fst-parse} is able to compose several transducers at runtime.
+It converts the input into an automaton, composes the first argument
+transducer with it and then composes the second argument transducer
+with the result of the first composition and so on. Finally the
+analysis layer is extracted and the output is generated.
+\texttt{fst-parse} is typically used when the composition of two
+transducers cannot be computed offline. The transducer resulting from
+the composition of a two-level morphology and a finite-state grammar
+e.g.\ is usually too big to be computed with the compiler. The result
+of composing the input sentence with the morphological analyzer, on
+the other hand, is small enough to be composed with the transducer of
+the finite state grammar.
+
+\texttt{fst-text2bin} converts transducers from text form to binary
+format. The two commands \texttt{fst-print transducer.a >
+  transducer.txt} and \texttt{fst-text2bin transducer.txt >
+  transducer2.a} should produce a transducer \texttt{transducer2.a}
+which is equivalent to (but not necessarily identical with)
+\texttt{transducer.a}.
+
+Finally, there is a tool called \texttt{fst-infl2-daemon} which
+creates a daemon which communicates with application programs via
+sockets. It is used analogously to \texttt{fst-infl2} but reads and
+writes from/to a socket. The Perl script \texttt{socket-client.pl} in
+the directory \texttt{src} is an example application which
+communicates with \texttt{fst-infl2-daemon}:
+\begin{verbatim}
+> fst-infl2-daemon 7100 /corpora/mlex/smor.ca &
+> echo "schlief" | ./socket-client.pl
+> schlief
+schlafen<+V><1><Sg><Past><Ind>
+schlafen<+V><3><Sg><Past><Ind>
+\end{verbatim}
+
+See the man pages for more information on all these commands.
+
+
+
+\subsection{Tricks}
+
+The compiler prints the name of the file and the line number that it
+is currently processing. It issues a warning when an empty transducer
+is assigned to a variable.
+
+If some intermediate transducer is rarely changed and its compilation
+takes a long time, then it is a good idea to compile it separately and
+to include it in the main file by means of the \verb#"<file>"#
+command.
+
+During debugging, it can be useful to write intermediate results of
+the compilation to a file, e.g.\ by using the command
+\verb#x >> "file"# which stores the transducer x in a file named
+\emph{file}. \verb#fst-print#, \verb#fst-generate#, and \verb#fst-mor#
+can be used to examine the transducer.
+
+\subsection{Caveats}
+
+SFST operations sometimes produce other results than the user
+might have expected. This section discusses some typical examples.
+
+\subsubsection*{Problems with Negation} 
+Consider the following SFST program
+\begin{verbatim}
+  ALPHABET = [a-z]
+  !(x)
+\end{verbatim}
+One might expect that this transducer fails to analyze the string
+\emph{abx}. But this is not the case. It only rejects the string
+\emph{x} but accepts any other letter sequence.
+
+Here is another example:
+\begin{verbatim}
+  ALPHABET = a a:b a:<> b b:a b:<> <>:a <>:b
+  !{ab}:{ba}
+\end{verbatim}
+Does this transducer generate the string \emph{ba} from \emph{ab}?
+Yes, it does! There are several ways in which the above transducer can
+map the string \emph{ab} to \emph{ba}, one of them consisting of the
+steps (i) mapping of \emph{a} to the empty symbol (ii) mapping of b
+onto itself, and (iii) insertion of \emph{a} after \emph{b}.  The
+crucial point is that the negation operation here disallows one
+particular mapping of the analysis string to the surface string, but
+still allows many others which are equivalent.
+
+(The above transducer generates an infinite number of different
+surface forms for the string \emph{ab}. Therefore you will get an
+error message if you try to actually generate from the string
+\emph{ab}.)
+
+
+\subsubsection*{Conjunction of Replace Rules} 
+
+Now, consider this example:
+\begin{verbatim}
+  ALPHABET = a b c
+  $Rule1$ = (a:b+) ^-> (b__b)
+  $Rule2$ = (a:c+) ^-> (c__c)
+  $Rule1$ & $Rule2$
+\end{verbatim}
+The first rule generates \emph{bbb} from \emph{bab} and the second
+rules generates \emph{ccc} from \emph{cac}. It might be expected that
+the conjunction of the two rules performs both mappings. This is not
+the case, however. The transducer for the first rule maps \emph{bab}
+to \emph{bbb}, but \emph{cac} to \emph{cac}. The conjunction of the
+two rules therefore fails to generate from the string \emph{cac} and
+similarly from the string \emph{bab}. 
+
+In order to obtain the intended mapping for both strings, the two
+rules have to be combined by composition rather than conjunction.
+
+
+\subsubsection*{Insertion With Replace Rules} 
+
+Replace rules are used to exchange a string in a certain context for
+another string. The following rule maps an \emph{a} in between two
+\emph{b}'s to \emph{c}.
+
+\begin{verbatim}
+  ALPHABET = a b c
+  a:c ^-> (b__b)
+\end{verbatim}
+
+It might be expected that a similar replace rule could be used to
+insert a string in a certain context:
+\begin{verbatim}
+  ALPHABET = a b c
+  <>:c ^-> (b__b)
+\end{verbatim}
+This will not work! The replace operation is unable to replace the
+empty string. A slightly different rule will do the job, however:
+\begin{verbatim}
+  ALPHABET = a b c
+  b:{bc} ^-> (__b)
+\end{verbatim}
+
+\subsection{Compilation Efficiency}
+
+Sometimes intermediate transducers generated by the compiler are much
+bigger than the final transducer and the compilation becomes slow. In
+such cases, it often helps to change the order in which the final
+transducer is built. Assume for instance that you have a sequence of
+10 phonological rules which are stored in the variables
+\texttt{\$rule1\$} up to \texttt{\$rule10\$}. These rules are applied
+to a set of wordforms stored in variable \texttt{\$lexicon\$} by a
+sequence of composition operations. This can be done as follows:
+\begin{verbatim}
+  $lexicon$ || $rule1$ || $rule2$ || ... || $rule10$
+\end{verbatim}
+This command will compose \texttt{\$lexicon\$} and
+\texttt{\$rule1\$}. Then it composes the result with
+\texttt{\$rule2\$} and so on. At the end, the transducer is minimised.
+The following sequence of commands does basically the same but minimises
+after each composition operation:
+\begin{verbatim}
+  $tmp$ = $lexicon$ || $rule1$
+  $tmp$ = $tmp$ || $rule2$
+  ...
+  $tmp$ = $tmp$ || $rule9$
+  $tmp$ || $rule10$
+\end{verbatim}
+It is also possible to first compile all rules into a single
+transducer which is then applied to the wordforms.
+\begin{verbatim}
+  $rules$ = $rule1$ || $rule2$ || ... || $rule10$
+  $lexicon$ || $rules$
+\end{verbatim}
+The rules can also be applied in chunks:
+\begin{verbatim}
+  $rulesA$ = $rule1$ || $rule2$ || $rule3$
+  $rulesB$ = $rule4$ || $rule5$ || $rule6$
+  $rulesC$ = $rule7$ || $rule8$ || $rule9$ || $rule10$
+  $tmp$ = $lexicon$ || $rulesA$
+  $tmp$ = $tmp$ || $rulesB$
+  $tmp$ || $rulesC$
+\end{verbatim}
+The result transducer is always the same. Which version is most
+efficient depends on the circumstances. If all the rules can easily be
+compiled into a single transducer (version 3 above), this is often a
+good choice because the rules transducer can be precompiled and stored
+in a file. If the rules transducer gets too big, it is better to use
+version 4 where the rules are applied in chunks. Again the chunks can
+be precompiled and stored in files.
+
+
+\bibliographystyle{apalike}
+\bibliography{bibliography}
+
+\end{document}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:
