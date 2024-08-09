@@ -21,33 +21,37 @@ SFST can be compiled in Unix/Linux, Windows and Mac operating systems.
 
 The SFST command line utilities has a few external requirements.
 
- 1. The "Flex" scanner generator which can be downloaded from: https://github.com/westes/flex. In linux systems they can be installed using package manager. For example, in Ubuntu, `apt install flex` installs it.
- 2. The "Bison" parser generator available from http://www.gnu.org/software/bison. In linux systems they can be installed using package manager. For example, in Ubuntu, `apt install bison` installs it.
+* The "Flex" scanner generator which can be downloaded from: <https://github.com/westes/flex>. In linux systems they can be installed using package manager. For example, in Ubuntu, `apt install flex` installs it.
+* The "Bison" parser generator available from <http://www.gnu.org/software/bison>. In linux systems they can be installed using package manager. For example, in Ubuntu, `apt install bison` installs it.
 
 After unpacking the software package, in the top directory of source code,
 
-```
+```bash
 mkdir build
 cd build
 cmake ..
-make
+cmake --build .
 ```
 
 to compile the tools. Then call
 
-```
-make install
+```bash
+cmake install
 ```
 
-to install the tools in /usr/local/bin. Change the variable DESTDIR
-in Makefile if you want to install to a different directory.
-Finally call
+to install the tools in /usr/local/bin.
 
+If you want to install the tools in a different directory, specify a different prefix using the --prefix option:
+
+```bash
+cmake --install . --prefix /my/install/prefix
 ```
+
+Finall, to install the manpages in /usr/local/man/man1:
+
+```bash
 make maninstall
 ```
-
-to install the manpages in /usr/local/man/man1 and you are done.
 
 The subdirectory data contains a simple example of an English
 morphological analyser, the source code of the German SMOR morphology
@@ -72,10 +76,21 @@ The SFST tools have been implemented by Helmut Schmid, Institute for
 Computational Linguistics, University of Stuttgart, Germany and they
 are available under the GNU public license version 2 or higher.
 
+Currently maintained by Santhosh Thottingal.
+
 Please cite the following publication if you want to refer to the SFST tools:
 
 `A Programming Language for Finite State Transducers, Proceedings of the 5th International Workshop on Finite State Methods in Natural Language Processing (FSMNLP 2005), Helsinki, Finland.` [pdf](https://www.cis.uni-muenchen.de/~schmid/papers/SFST-PL.pdf)
 
-## Bug reports
+Same can be cited as:
 
-Please send bug reports and other feedback to schmid@cis.lmu.de.
+```bibtex
+@inproceedings{schmid2005programming,
+  title={A programming language for finite state transducers},
+  author={Schmid, Helmut},
+  booktitle={Proceedings of the 5th International Workshop on Finite State Methods in Natural Language Processing (FSMNLP)},
+  volume={4002},
+  pages={308--309},
+  year={2005}
+}
+```

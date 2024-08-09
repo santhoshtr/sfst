@@ -9,4 +9,4 @@ build-backend = "setuptools.build_meta"
 
 [tool.cibuildwheel]
 build = "*"
-skip = "pp*"
+skip = ["cp36-*","pp*"]
