@@ -27,7 +27,7 @@ jobs:
     - uses: actions/setup-python@v5
       name: Install Python
       with:
-          python-version: '3.10'
+          python-version: '3.12'
 
     - name: Build sdist
       run: python setup.py sdist
@@ -55,7 +55,10 @@ jobs:
       with:
         python-version: '3.12'
     - name: Build wheels
-      uses: pypa/cibuildwheel@v2.11.2
+      uses: pypa/cibuildwheel@v2.17
+      env:
+        CIBW_ARCHS_MACOS: auto universal2
+
     - name: Show files
       run: ls -lh wheelhouse
       shell: bash
@@ -65,8 +68,9 @@ jobs:
       shell: bash
 
     - name: Upload wheels
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
+        name: cibw-wheels-${{ matrix.os }}
         path: wheelhouse/*.whl
 
   upload_all:
@@ -79,14 +83,15 @@ jobs:
     steps:
     - uses: actions/setup-python@v5
       with:
-        python-version: '3.12'
+        python-version: '3.x'
 
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       with:
+        pattern: cibw-*
         name: artifact
         path: dist
 
-    - uses: pypa/gh-action-pypi-publish@v1.8.14
+    - uses: pypa/gh-action-pypi-publish@release/v1
       with:
         user: __token__
         password: ${{ secrets.pypi_password }}

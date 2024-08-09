@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.20)
 file(STRINGS "VERSION" SFST_VERSION)
 
 project(sfst VERSION ${SFST_VERSION})
@@ -18,4 +18,5 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/version.h.in
 add_subdirectory(src)
 
 # add python bindings
+add_subdirectory(pybind11)
 add_subdirectory(python)
