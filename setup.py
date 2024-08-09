@@ -138,4 +138,5 @@ setup(
     cmdclass={"build_ext": CMakeBuild},
     package_dir={"": "python"},
     zip_safe=False,
+    python_requires='>3.8.0',
 )
