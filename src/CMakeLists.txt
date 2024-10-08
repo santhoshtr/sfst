@@ -114,7 +114,7 @@ install(TARGETS libsfst
     RUNTIME DESTINATION lib)
 
 # Install the headers
-install(FILES ${HEADERS} DESTINATION include)
+install(FILES ${HEADERS} DESTINATION include/${PROJECT_NAME})
 
 file(GLOB_RECURSE SOURCE_FILES *.cpp)
 
