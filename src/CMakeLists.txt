@@ -1,7 +1,10 @@
 cmake_minimum_required(VERSION 3.20)
 
+list(INSERT CMAKE_MODULE_PATH 0 "${PROJECT_SOURCE_DIR}/src/cmake")
+
 find_package(FLEX)
 find_package(BISON)
+find_package(readline)
 
 set(CMAKE_CXX_FLAGS "-O3 -Wall -std=c++17 -ansi")
 
@@ -19,6 +22,10 @@ if(FLEX_FOUND)
     FLEX_TARGET(sfst utf8-scanner.ll ${CMAKE_CURRENT_BINARY_DIR}/utf8-scanner.cpp COMPILE_FLAGS --nounput)
 else()
     message(STATUS "Flex not found, so executables won't be generated.")
+endif()
+
+if(NOT READLINE_FOUND)
+    message(STATUS "Readline not found, so executables won't be generated.")
 endif()
 
 # Include dir
