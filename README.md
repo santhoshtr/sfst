@@ -1,19 +1,17 @@
-
 # SFST - Stuttgart Finite State Transducer
 
+| CI            | status                                                                |
+| ------------- | --------------------------------------------------------------------- |
+| CMake builds  | [![CMake Actions Status][actions-cmake-badge]][actions-cmake-link]    |
+| Pip builds    | [![Pip Actions Status][actions-pip-badge]][actions-pip-link]          |
+| Wheels builds | [![Wheels Actions Status][actions-wheels-badge]][actions-wheels-link] |
 
-|      CI              | status |
-|----------------------|--------|
-| CMake builds           | [![CMake Actions Status][actions-cmake-badge]][actions-cmake-link] |
-| Pip builds           | [![Pip Actions Status][actions-pip-badge]][actions-pip-link] |
-| Wheels builds           | [![Wheels Actions Status][actions-wheels-badge]][actions-wheels-link] |
-
-[actions-cmake-link]:        https://github.com/santhoshtr/sfst/actions?query=workflow%3A%22CMake
-[actions-pip-link]:        https://github.com/santhoshtr/sfst/actions?query=workflow%3A%22Pip
-[actions-wheels-link]:        https://github.com/santhoshtr/sfst/actions?query=workflow%3A%22Wheels
-[actions-cmake-badge]:       https://github.com/santhoshtr/sfst/workflows/CMake/badge.svg
-[actions-pip-badge]:       https://github.com/santhoshtr/sfst/workflows/Pip/badge.svg
-[actions-wheels-badge]:       https://github.com/santhoshtr/sfst/workflows/Wheels/badge.svg
+[actions-cmake-link]: https://github.com/santhoshtr/sfst/actions?query=workflow%3A%22CMake
+[actions-pip-link]: https://github.com/santhoshtr/sfst/actions?query=workflow%3A%22Pip
+[actions-wheels-link]: https://github.com/santhoshtr/sfst/actions?query=workflow%3A%22Wheels
+[actions-cmake-badge]: https://github.com/santhoshtr/sfst/workflows/CMake/badge.svg
+[actions-pip-badge]: https://github.com/santhoshtr/sfst/workflows/Pip/badge.svg
+[actions-wheels-badge]: https://github.com/santhoshtr/sfst/workflows/Wheels/badge.svg
 
 ## Installation
 
@@ -21,8 +19,8 @@ SFST can be compiled in Unix/Linux, Windows and Mac operating systems.
 
 The SFST command line utilities has a few external requirements.
 
-* The "Flex" scanner generator which can be downloaded from: <https://github.com/westes/flex>. In linux systems they can be installed using package manager. For example, in Ubuntu, `apt install flex` installs it.
-* The "Bison" parser generator available from <http://www.gnu.org/software/bison>. In linux systems they can be installed using package manager. For example, in Ubuntu, `apt install bison` installs it.
+- The "Flex" scanner generator which can be downloaded from: <https://github.com/westes/flex>. In linux systems they can be installed using package manager. For example, in Ubuntu, `apt install flex` installs it.
+- The "Bison" parser generator available from <http://www.gnu.org/software/bison>. In linux systems they can be installed using package manager. For example, in Ubuntu, `apt install bison` installs it.
 
 After unpacking the software package, in the top directory of source code,
 
@@ -69,6 +67,11 @@ If you want to implement your own tools based on the SFST code, have a
 look at fst-infl.C and fst-infl2.C. They show how analysers are
 implemented with the standard (fst-infl) and the compact (fst-infl2)
 transducer format.
+
+## Bindings
+
+- Python: `pip install sfst`
+- Rust `cargo install sfst`
 
 ## Author
 
