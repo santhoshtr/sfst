@@ -13,28 +13,28 @@ jobs:
       fail-fast: false
       matrix:
         platform: [windows-latest, macos-latest, ubuntu-latest]
-        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
 
     runs-on: ${{ matrix.platform }}
 
     steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: true
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
 
-    - uses: actions/setup-python@v5
-      with:
-        python-version: ${{ matrix.python-version }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
 
-    - name: Add requirements
-      run: python -m pip install --upgrade wheel setuptools
+      - name: Add requirements
+        run: python -m pip install --upgrade wheel setuptools
 
-    - name: Install libreadline (Ubuntu only)
-      if: runner.os == 'Linux'
-      run: sudo apt-get install -y bison flex libreadline-dev
+      - name: Install libreadline (Ubuntu only)
+        if: runner.os == 'Linux'
+        run: sudo apt-get install -y bison flex libreadline-dev
 
-    - name: Build and install
-      run: pip install --verbose .
+      - name: Build and install
+        run: pip install --verbose .
 
-    - name: Test
-      run: python python/tests/test.py
+      - name: Test
+        run: python python/tests/test.py
