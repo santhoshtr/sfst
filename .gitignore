@@ -44,3 +44,7 @@ venv.bak/
 # IDEs
 .vscode
 .idea
+
+
+# Rust
+target/
