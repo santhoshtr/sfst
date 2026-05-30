@@ -512,16 +512,47 @@ Label Alphabet::next_label(char *&string, bool extended) {
 /*                                                                 */
 /*******************************************************************/
 
-void Alphabet::string2symseq(std::string s, vector<Character> &ch)
+bool Alphabet::string2symseq(std::string s, vector<Character> &ch)
 
 {
-  int c;
-
+  // Tokenize the input read-only: unknown symbols are reported rather than
+  // inserted, so analysing a word never mutates the shared alphabet. Returns
+  // false (and leaves ch empty) if the input contains an out-of-vocabulary
+  // symbol or malformed UTF-8.
   char *cstr = new char[s.length() + 1];
   std::strcpy(cstr, s.c_str());
 
-  while ((c = next_code(cstr, false, false)) != EOF)
+  bool ok = true;
+  for (char *p = cstr; *p;) {
+    // multi-character symbol <...> must already be in the alphabet
+    int c = next_mcsym(p, false);
+    if (c == EOF) {
+      // single character: look up its code without inserting it
+      std::string sym;
+      if (utf8) {
+        unsigned int u = utf8toint(&p);
+        if (u == 0) {
+          ok = false; // malformed UTF-8
+          break;
+        }
+        sym = int2utf8(u);
+      } else {
+        sym = std::string(p, 1);
+        p++;
+      }
+      c = symbol2code(sym);
+      if (c == EOF) {
+        ok = false; // out-of-vocabulary symbol
+        break;
+      }
+    }
     ch.push_back((Character)c);
+  }
+
+  delete[] cstr;
+  if (!ok)
+    ch.clear();
+  return ok;
 }
 
 /*******************************************************************/
