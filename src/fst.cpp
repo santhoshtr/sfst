@@ -555,7 +555,8 @@ vector<std::string> Transducer::find_paths(Node *node, bool with_brackets) {
 vector<std::string> Transducer::analyze_string(char *string,
                                                bool with_brackets) {
   vector<Character> input;
-  alphabet.string2symseq(string, input);
+  if (!alphabet.string2symseq(string, input))
+    return {}; // input contains an out-of-vocabulary symbol: no analysis
   vector<Label> labels;
   for (size_t i = 0; i < input.size(); i++)
     labels.push_back(Label(input[i]));
@@ -1043,9 +1044,15 @@ Transducer::Transducer(FILE *file, bool binary)
 {
   indexed = false;
   node_count = transition_count = 0;
-  if (binary)
+  if (binary) {
     read_transducer_binary(file);
-  else
+    // Index the node graph now, while we are still single-threaded, so that
+    // analyze_string/generate_string never mutate this shared transducer
+    // during a query. Once indexed, the graph is frozen and a single loaded
+    // transducer can be queried concurrently from several threads without
+    // locking.
+    nodeindexing();
+  } else
     read_transducer_text(file);
 }
 

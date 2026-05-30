@@ -268,8 +268,9 @@ public:
   // scan the next symbol in the argument string
   int next_code(char *&, bool extended = true, bool insert = true);
 
-  // convert a character string into a symbol or label sequence
-  void string2symseq(std::string, vector<Character> &);
+  // convert a character string into a symbol or label sequence;
+  // returns false (with an empty result) on an out-of-vocabulary symbol
+  bool string2symseq(std::string, vector<Character> &);
   void string2labelseq(std::string, vector<Label> &);
 
   // scan the next label in the argument string

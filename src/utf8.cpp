@@ -33,7 +33,9 @@ const unsigned char set4MSbits = 240;
 char *int2utf8(unsigned int sym)
 
 {
-  static unsigned char ch[5];
+  // thread_local so concurrent analysis queries don't race on the buffer
+  // whose address is returned to the caller
+  static thread_local unsigned char ch[5];
 
   if (sym < 128) {
     // 1-byte UTF8 symbol, 7 bits
