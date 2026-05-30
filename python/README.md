@@ -4,7 +4,7 @@ This is python binding for SFST. The `sfst` python library can be imported and c
 
 ## Installation
 
-`sfs` python library is available at pypi.org. It can be installed as follows:
+`sfst` python library is available at pypi.org. It can be installed as follows:
 
 ```bash
 pip install sfst
