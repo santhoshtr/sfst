@@ -16,6 +16,8 @@ include(CPack)
 pybind11_add_module(sfst
 	sfst.cpp
 )
-target_compile_definitions(sfst PRIVATE VERSION_INFO=${VERSION_INFO})
+target_compile_definitions(sfst PRIVATE VERSION_INFO=${PROJECT_VERSION})
 
 target_link_libraries(sfst PRIVATE libsfststatic)
+
+install(TARGETS sfst LIBRARY DESTINATION . COMPONENT python)

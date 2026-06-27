@@ -1,6 +1,0 @@
-include VERSION COPYING CMakeLists.txt
-graft data
-graft doc
-graft src
-graft python
-
