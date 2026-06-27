@@ -17,6 +17,10 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/version.h.in
 # add library code
 add_subdirectory(src)
 
-# add python bindings
-add_subdirectory(pybind11)
-add_subdirectory(python)
+# add python bindings (only when building the wheel via scikit-build-core,
+# which provides pybind11 through the build-system requirements)
+if(SKBUILD)
+  set(PYBIND11_FINDPYTHON ON)
+  find_package(pybind11 CONFIG REQUIRED)
+  add_subdirectory(python)
+endif()
