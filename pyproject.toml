@@ -3,10 +3,9 @@ requires = [
     "setuptools>=42",
     "wheel",
     "ninja; sys_platform != 'win32'",
-    "cmake>=3.12",
+    "cmake>=3.20",
 ]
 build-backend = "setuptools.build_meta"
 
 [tool.cibuildwheel]
-build = "*"
-skip = ["cp36-*","pp*"]
+build = "cp31{0,1,2,3,4}-*"
