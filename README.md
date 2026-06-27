@@ -45,7 +45,7 @@ If you want to install the tools in a different directory, specify a different p
 cmake --install . --prefix /my/install/prefix
 ```
 
-Finall, to install the manpages in /usr/local/man/man1:
+Finally, to install the manpages in /usr/local/man/man1:
 
 ```bash
 make maninstall
